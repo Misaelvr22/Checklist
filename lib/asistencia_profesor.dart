@@ -1,6 +1,17 @@
+import 'dart:core';
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:pdf/pdf.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'componentes/tema.dart';
+import 'dart:typed_data'; // <-- IMPORTANTE
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:path_provider/path_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -182,7 +193,14 @@ class _HomePageState extends State<HomePage> {
                           icon: Icons.description,
                           label: 'Reporte de asistencia',
                           color: Colors.purple,
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AttendanceReport(),
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(width: 16),
                       ],
@@ -597,6 +615,160 @@ class _QRGeneratorPageState extends State<QRGeneratorPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ───────────────────────────────────────────────────────────────
+class AttendanceReport extends StatefulWidget {
+  const AttendanceReport({super.key});
+
+  @override
+  State<AttendanceReport> createState() => _AttendanceReportState();
+}
+
+class _AttendanceReportState extends State<AttendanceReport> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+          child: Center(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Center(
+            child: Container(
+              constraints: BoxConstraints(maxHeight: 850, maxWidth: 390),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Color.fromARGB(199, 237, 238, 245),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: [
+                          AppBar(
+                            title: const Text('Reporte de Asistencia'),
+                            foregroundColor: Colors.white,
+                            backgroundColor: azulOscuro,
+                          ),
+                          //Padding(padding: const EdgeInsets.all(15.0)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Image.asset(
+                                'images/TecNM.png',
+                                width: 100,
+                              ),
+                              SizedBox(width: 20),
+                              Image.asset(
+                                'images/ITZ.png',
+                                width: 100,
+                              ),
+                            ],
+                          ),
+                          Text('INSTITUTO TECNOLOGICO DE ZACATEPEC ITZ',
+                              style: GoogleFonts.arimo(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              )),
+                          Padding(padding: const EdgeInsets.all(10.0)),
+                          Text(
+                            'DOCENTE: ALEJANDRA CALYPSO ',
+                            style: GoogleFonts.arimo(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Padding(padding: const EdgeInsets.all(10.0)),
+                          Text(
+                            'ASIGNATURA: IGENIERIA DE SOFTWARE',
+                            style: GoogleFonts.arimo(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Padding(padding: const EdgeInsets.all(10.0)),
+                          Text(
+                            'PERIODO: ENERO-FEBRERO 2025',
+                            style: GoogleFonts.arimo(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Padding(padding: const EdgeInsets.all(10.0)),
+                          Text(
+                            'GRUPO: XA',
+                            style: GoogleFonts.arimo(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Padding(padding: const EdgeInsets.all(10.0)),
+                          Text(
+                            'Generado el: ${DateTime.now().toString().substring(0, 16)}',
+                            style: GoogleFonts.arimo(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Padding(padding: const EdgeInsets.all(10.0)),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              columns: [
+                                DataColumn(label: Text('Numero Control')),
+                                DataColumn(label: Text('Nombre Alumno')),
+                                DataColumn(label: Text('20-MAY')),
+                                DataColumn(label: Text('15-MAY')),
+                                DataColumn(label: Text('16-MAY')),
+                                DataColumn(label: Text('% Asistencia')),
+                                DataColumn(label: Text('Observaciones')),
+                              ],
+                              rows: [
+                                DataRow(cells: [
+                                  DataCell(Text('2090597')),
+                                  DataCell(Text('Yamil Barbosa')),
+                                  DataCell(Text('✓')),
+                                  DataCell(Text('✗')),
+                                  DataCell(Text('✓')),
+                                  DataCell(Text('66,67%')),
+                                  DataCell(Text('')),
+                                ]),
+                                DataRow(cells: [
+                                  DataCell(Text('2090598')),
+                                  DataCell(Text('Ana García')),
+                                  DataCell(Text('✓')),
+                                  DataCell(Text('✓')),
+                                  DataCell(Text('✗')),
+                                  DataCell(Text('66,67%')),
+                                  DataCell(Text('')),
+                                ]),
+                                DataRow(cells: [
+                                  DataCell(Text('2090599')),
+                                  DataCell(Text('Carlos López')),
+                                  DataCell(Text('✗')),
+                                  DataCell(Text('✓')),
+                                  DataCell(Text('✓')),
+                                  DataCell(Text('66,67%')),
+                                  DataCell(Text('')),
+                                ]),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ),
+      )),
     );
   }
 }
