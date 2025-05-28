@@ -7,7 +7,7 @@ import '../componentes/tema.dart';
 import 'inicio_sesion.dart';
 
 class RegistroEstudiante extends StatefulWidget {
-  const RegistroEstudiante({Key? key}) : super(key: key);
+  const RegistroEstudiante({super.key});
 
   @override
   _RegistroEstudianteState createState() => _RegistroEstudianteState();

@@ -14,7 +14,7 @@ import 'package:printing/printing.dart';
 import 'package:path_provider/path_provider.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -186,7 +186,13 @@ class _HomePageState extends State<HomePage> {
                           icon: Icons.bar_chart,
                           label: 'Ver retroalimentación',
                           color: Colors.orange,
-                          onTap: () {},
+                          onTap: () {Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FeedbackPage(),
+                          ),
+                        );
+                      },
                         ),
                         const SizedBox(width: 16),
                         _buildActionButton(
@@ -361,7 +367,7 @@ Widget _buildActionButton({
 // ───────────────────────────────────────────────────────────────
 // Add Students Page
 class AddStudentsPage extends StatefulWidget {
-  const AddStudentsPage({Key? key}) : super(key: key);
+  const AddStudentsPage({super.key});
 
   @override
   _AddStudentsPageState createState() => _AddStudentsPageState();
@@ -523,7 +529,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> {
 class QRGeneratorPage extends StatefulWidget {
   final String className;
 
-  const QRGeneratorPage({Key? key, required this.className}) : super(key: key);
+  const QRGeneratorPage({super.key, required this.className});
 
   @override
   _QRGeneratorPageState createState() => _QRGeneratorPageState();
@@ -685,7 +691,7 @@ class _AttendanceReportState extends State<AttendanceReport> {
                           ),
                           Padding(padding: const EdgeInsets.all(10.0)),
                           Text(
-                            'ASIGNATURA: IGENIERIA DE SOFTWARE',
+                            'ASIGNATURA: INGENIERIA DE SOFTWARE',
                             style: GoogleFonts.arimo(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -770,5 +776,488 @@ class _AttendanceReportState extends State<AttendanceReport> {
         ),
       )),
     );
+  }
+}
+
+class FeedbackPage extends StatefulWidget {
+  final String? initialSubject; // Para abrir directamente en una materia
+  
+  const FeedbackPage({super.key, this.initialSubject});
+
+  @override
+  _FeedbackPageState createState() => _FeedbackPageState();
+}
+
+class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  String selectedFilter = 'Todos';
+  final List<String> filters = ['Todos', 'Opiniones', 'Dudas', 'Sugerencias', 'Quejas'];
+  final List<String> subjects = ['Todas', 'Matemáticas', 'Programación', 'Base de Datos', 'Software'];
+  
+  // Mock data de retroalimentación
+  List<Map<String, dynamic>> feedbackData = [
+    {
+      'id': '1',
+      'studentName': 'Juan Pérez',
+      'studentId': '18320100',
+      'type': 'Opiniones',
+      'message': 'Me gusta mucho la clase de programación, especialmente cuando vemos ejemplos prácticos. Los ejercicios son muy útiles.',
+      'date': '2025-05-27 10:30',
+      'rating': 5,
+      'className': 'Programación',
+      'isAnonymous': false,
+    },
+    {
+      'id': '2',
+      'studentName': 'Anónimo',
+      'studentId': '',
+      'type': 'Dudas',
+      'message': '¿Podrían explicar mejor el tema de recursividad? Me cuesta trabajo entender los casos base.',
+      'date': '2025-05-27 09:15',
+      'rating': null,
+      'className': 'Programación',
+      'isAnonymous': true,
+    },
+    {
+      'id': '3',
+      'studentName': 'María González',
+      'studentId': '18320101',
+      'type': 'Sugerencias',
+      'message': 'Sería genial si pudiéramos tener más tiempo para los laboratorios prácticos.',
+      'date': '2025-05-26 16:45',
+      'rating': 4,
+      'className': 'Base de Datos',
+      'isAnonymous': false,
+    },
+    {
+      'id': '4',
+      'studentName': 'Carlos Rodríguez',
+      'studentId': '18320102',
+      'type': 'Opiniones',
+      'message': 'Las clases están muy bien estructuradas. Me ayuda mucho la forma en que explican los conceptos.',
+      'date': '2025-05-26 14:20',
+      'rating': 5,
+      'className': 'Software',
+      'isAnonymous': false,
+    },
+    {
+      'id': '5',
+      'studentName': 'Anónimo',
+      'studentId': '',
+      'type': 'Quejas',
+      'message': 'El ritmo de la clase es un poco rápido, a veces no alcanzamos a tomar apuntes.',
+      'date': '2025-05-25 11:10',
+      'rating': 2,
+      'className': 'Matemáticas',
+      'isAnonymous': true,
+    },
+    {
+      'id': '6',
+      'studentName': 'Ana López',
+      'studentId': '18320103',
+      'type': 'Dudas',
+      'message': '¿Pueden proporcionar más ejemplos del tema de normalización en bases de datos?',
+      'date': '2025-05-25 08:30',
+      'rating': null,
+      'className': 'Base de Datos',
+      'isAnonymous': false,
+    },
+    {
+      'id': '7',
+      'studentName': 'Luis Martín',
+      'studentId': '18320104',
+      'type': 'Opiniones',
+      'message': 'Los ejercicios de matemáticas están muy bien planteados, me ayudan a entender mejor.',
+      'date': '2025-05-24 15:20',
+      'rating': 4,
+      'className': 'Matemáticas',
+      'isAnonymous': false,
+    },
+    {
+      'id': '8',
+      'studentName': 'Sofia Cruz',
+      'studentId': '18320105',
+      'type': 'Sugerencias',
+      'message': 'Podrían usar más herramientas visuales para explicar los algoritmos de software.',
+      'date': '2025-05-24 11:45',
+      'rating': 3,
+      'className': 'Software',
+      'isAnonymous': false,
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: subjects.length, vsync: this);
+    
+    // Si se pasa una materia inicial, cambiar al tab correspondiente
+    if (widget.initialSubject != null) {
+      int initialIndex = subjects.indexOf(widget.initialSubject!);
+      if (initialIndex != -1) {
+        _tabController.index = initialIndex;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  List<Map<String, dynamic>> getFilteredFeedback(String subject) {
+    List<Map<String, dynamic>> subjectFiltered;
+    
+    // Filtrar por materia
+    if (subject == 'Todas') {
+      subjectFiltered = feedbackData;
+    } else {
+      subjectFiltered = feedbackData.where((feedback) => feedback['className'] == subject).toList();
+    }
+    
+    // Filtrar por tipo
+    if (selectedFilter == 'Todos') {
+      return subjectFiltered;
+    }
+    return subjectFiltered.where((feedback) => feedback['type'] == selectedFilter).toList();
+  }
+
+  Map<String, int> getSubjectStats(String subject) {
+    List<Map<String, dynamic>> subjectData;
+    if (subject == 'Todas') {
+      subjectData = feedbackData;
+    } else {
+      subjectData = feedbackData.where((feedback) => feedback['className'] == subject).toList();
+    }
+    
+    return {
+      'total': subjectData.length,
+      'opiniones': subjectData.where((f) => f['type'] == 'Opiniones').length,
+      'dudas': subjectData.where((f) => f['type'] == 'Dudas').length,
+      'sugerencias': subjectData.where((f) => f['type'] == 'Sugerencias').length,
+      'quejas': subjectData.where((f) => f['type'] == 'Quejas').length,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Retroalimentación de Estudiantes'),
+        backgroundColor: azulOscuro,
+        elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          tabs: subjects.map((subject) => Tab(text: subject)).toList(),
+        ),
+      ),
+      body: Container(
+        color: azulClaro.withOpacity(0.08),
+        child: TabBarView(
+          controller: _tabController,
+          children: subjects.map((subject) => _buildSubjectView(subject)).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubjectView(String subject) {
+    final stats = getSubjectStats(subject);
+    final filteredData = getFilteredFeedback(subject);
+    
+    return Column(
+      children: [
+        // Header con estadísticas específicas de la materia
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Card(
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  if (subject != 'Todas')
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        subject,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: azulOscuro,
+                        ),
+                      ),
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatItem('Total', stats['total']!, Icons.comment, azul),
+                      _buildStatItem('Opiniones', stats['opiniones']!, Icons.thumb_up, Colors.green),
+                      _buildStatItem('Dudas', stats['dudas']!, Icons.help, Colors.orange),
+                      _buildStatItem('Sugerencias', stats['sugerencias']!, Icons.lightbulb, Colors.blue),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        
+        // Filtros por tipo
+        Container(
+          height: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: filters.length,
+            itemBuilder: (context, index) {
+              final filter = filters[index];
+              final isSelected = filter == selectedFilter;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(filter),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      selectedFilter = filter;
+                    });
+                  },
+                  selectedColor: azul.withOpacity(0.2),
+                  checkmarkColor: azul,
+                  labelStyle: TextStyle(
+                    color: isSelected ? azul : null,
+                    fontWeight: isSelected ? FontWeight.bold : null,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        
+        // Lista de retroalimentación filtrada
+        Expanded(
+          child: filteredData.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.inbox, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No hay retroalimentación para mostrar',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredData.length,
+                  itemBuilder: (context, index) {
+                    final feedback = filteredData[index];
+                    return _buildFeedbackCard(feedback);
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(String label, int count, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          count.toString(),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeedbackCard(Map<String, dynamic> feedback) {
+    Color typeColor = _getTypeColor(feedback['type']);
+    IconData typeIcon = _getTypeIcon(feedback['type']);
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header del feedback
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: typeColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(typeIcon, size: 16, color: typeColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        feedback['type'],
+                        style: TextStyle(
+                          color: typeColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                if (feedback['rating'] != null)
+                  Row(
+                    children: List.generate(5, (index) {
+                      return Icon(
+                        index < feedback['rating'] ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 16,
+                      );
+                    }),
+                  ),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Mensaje de retroalimentación
+            Text(
+              feedback['message'],
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Footer con información del estudiante
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: azulClaro,
+                  child: Icon(
+                    feedback['isAnonymous'] ? Icons.person_outline : Icons.person,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        feedback['studentName'],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (!feedback['isAnonymous'] && feedback['studentId'].isNotEmpty)
+                        Text(
+                          feedback['studentId'],
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      feedback['className'],
+                      style: TextStyle(
+                        color: azul,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      _formatDate(feedback['date']),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getTypeColor(String type) {
+    switch (type) {
+      case 'Opiniones':
+        return Colors.green;
+      case 'Dudas':
+        return Colors.orange;
+      case 'Sugerencias':
+        return Colors.blue;
+      case 'Quejas':
+        return Colors.red;
+      default:
+        return azul;
+    }
+  }
+
+  IconData _getTypeIcon(String type) {
+    switch (type) {
+      case 'Opiniones':
+        return Icons.thumb_up;
+      case 'Dudas':
+        return Icons.help;
+      case 'Sugerencias':
+        return Icons.lightbulb;
+      case 'Quejas':
+        return Icons.warning;
+      default:
+        return Icons.comment;
+    }
+  }
+
+  String _formatDate(String dateStr) {
+    DateTime date = DateTime.parse(dateStr);
+    return '${date.day}/${date.month} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

@@ -5,6 +5,8 @@ import '../componentes/tema.dart';
 import 'inicio_sesion.dart';
 
 class OlvidoContrasena extends StatefulWidget {
+  const OlvidoContrasena({super.key});
+
   @override
   _OlvidoContrasenaState createState() => _OlvidoContrasenaState();
 }
@@ -165,6 +167,13 @@ class _OlvidoContrasenaState extends State<OlvidoContrasena> {
                               pwReset();
                             }
                           },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: azulOscuro,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            elevation: 0,
+                          ),
                           child: Text(
                             'Continuar',
                             style: TextStyle(
@@ -172,13 +181,6 @@ class _OlvidoContrasenaState extends State<OlvidoContrasena> {
                               fontWeight: FontWeight.bold,
                               color: blanco,
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: azulOscuro,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            elevation: 0,
                           ),
                         ),
                       ),

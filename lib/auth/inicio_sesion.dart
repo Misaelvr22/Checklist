@@ -10,7 +10,7 @@ import 'olvido_contraseña.dart';
 import 'registro.dart';
 
 class InicioSesion extends StatefulWidget {
-  const InicioSesion({Key? key}) : super(key: key);
+  const InicioSesion({super.key});
 
   @override
   _InicioSesionState createState() => _InicioSesionState();
