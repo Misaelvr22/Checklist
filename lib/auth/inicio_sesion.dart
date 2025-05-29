@@ -1,4 +1,7 @@
 import 'package:check_list/asistencia_profesor.dart';
+import 'package:check_list/dashboard_admin.dart';
+import 'package:check_list/estudiante_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,7 +29,6 @@ class _InicioSesionState extends State<InicioSesion> {
 
   // Sign in method
   void signUserIn() async {
-    // Validate form
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -36,10 +38,38 @@ class _InicioSesionState extends State<InicioSesion> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+
+      String uid = userCredential.user!.uid;
+
+      // Buscar en las tres rutas posibles
+      DocumentSnapshot estudianteDoc = await FirebaseFirestore.instance
+          .doc('Registro/Estudiantes/Usuarios/$uid')
+          .get();
+      DocumentSnapshot adminDoc = await FirebaseFirestore.instance
+          .doc('Registro/Administrador/Usuarios/$uid')
+          .get();
+      DocumentSnapshot profesorDoc = await FirebaseFirestore.instance
+          .doc('Registro/Profesor/Usuarios/$uid')
+          .get();
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (estudianteDoc.exists) {
+        Get.offAll(() => EstudianteDashboard());
+      } else if (adminDoc.exists) {
+        Get.offAll(() => AdminDashboard());
+      } else if (profesorDoc.exists) {
+        Get.offAll(() => PaginaProfesor());
+      } else {
+        _showErrorSnackBar('No se encontró información del usuario');
+      }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _isLoading = false;
@@ -235,7 +265,7 @@ class _InicioSesionState extends State<InicioSesion> {
                             height: 48,
                             child: ElevatedButton(
                               onPressed: () {
-                                Get.to(HomePage());
+                                signUserIn();
                               },
                               // _isLoading ? null : signUserIn,
                               style: ElevatedButton.styleFrom(

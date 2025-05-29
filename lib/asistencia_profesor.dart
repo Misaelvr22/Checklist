@@ -1,7 +1,6 @@
 import 'dart:core';
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,14 +14,14 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:path_provider/path_provider.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class PaginaProfesor extends StatefulWidget {
+  const PaginaProfesor({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _PaginaProfesorState createState() => _PaginaProfesorState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _PaginaProfesorState extends State<PaginaProfesor> {
   final classes = [
     'Matemáticas',
     'Programación',
