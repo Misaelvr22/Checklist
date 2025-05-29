@@ -1,6 +1,9 @@
+import 'package:check_list/asistencia_profesor.dart';
+import 'package:check_list/dashboard_admin.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'auth/inicio_sesion.dart';
 import 'firebase_options.dart';
 
@@ -9,6 +12,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await initializeDateFormatting('es_ES', null);
   runApp(const MyApp());
 }
 
@@ -19,7 +23,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      home: InicioSesion(),
+      home: HomePage(),
     );
   }
 }

@@ -5,8 +5,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'auth/inicio_sesion.dart';
 import 'componentes/tema.dart';
 import 'dart:typed_data'; // <-- IMPORTANTE
 import 'package:pdf/widgets.dart' as pw;
@@ -21,7 +23,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final classes = ['Matemáticas', 'Programación', 'Base de Datos', 'Software'];
+  final classes = [
+    'Matemáticas',
+    'Programación',
+    'Base de Datos',
+    'Ingenieria de Software'
+  ];
   String selectedClass = 'Programación';
 
   // Mock attendance data
@@ -53,7 +60,34 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Panel de Asistencia'),
         backgroundColor: azulOscuro,
+        foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          PopupMenuButton<String>(
+            icon: CircleAvatar(
+              backgroundColor: Colors.blue[600],
+              radius: 16,
+              child: Text(
+                'A',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            ),
+            onSelected: (value) {
+              if (value == 'logout') {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => InicioSesion()),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'logout',
+                child: Text('Cerrar sesión'),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Container(
         color: azulClaro.withOpacity(0.08),
@@ -186,13 +220,14 @@ class _HomePageState extends State<HomePage> {
                           icon: Icons.bar_chart,
                           label: 'Ver retroalimentación',
                           color: Colors.orange,
-                          onTap: () {Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const FeedbackPage(),
-                          ),
-                        );
-                      },
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const FeedbackPage(),
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(width: 16),
                         _buildActionButton(
@@ -203,7 +238,8 @@ class _HomePageState extends State<HomePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const AttendanceReport(),
+                                builder: (context) =>
+                                    const AttendanceReportScreen(),
                               ),
                             );
                           },
@@ -390,6 +426,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> {
       appBar: AppBar(
         title: const Text('Añadir Estudiantes'),
         backgroundColor: azulOscuro,
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -553,6 +590,7 @@ class _QRGeneratorPageState extends State<QRGeneratorPage> {
       appBar: AppBar(
         title: const Text('Código QR'),
         backgroundColor: azulOscuro,
+        foregroundColor: Colors.white,
       ),
       body: Center(
         child: Padding(
@@ -625,175 +663,34 @@ class _QRGeneratorPageState extends State<QRGeneratorPage> {
   }
 }
 
-// ───────────────────────────────────────────────────────────────
-class AttendanceReport extends StatefulWidget {
-  const AttendanceReport({super.key});
-
-  @override
-  State<AttendanceReport> createState() => _AttendanceReportState();
-}
-
-class _AttendanceReportState extends State<AttendanceReport> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-          child: Center(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: Center(
-            child: Container(
-              constraints: BoxConstraints(maxHeight: 850, maxWidth: 390),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Color.fromARGB(199, 237, 238, 245),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      alignment: Alignment.center,
-                      child: Column(
-                        children: [
-                          AppBar(
-                            title: const Text('Reporte de Asistencia'),
-                            foregroundColor: Colors.white,
-                            backgroundColor: azulOscuro,
-                          ),
-                          //Padding(padding: const EdgeInsets.all(15.0)),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Image.asset(
-                                'images/TecNM.png',
-                                width: 100,
-                              ),
-                              SizedBox(width: 20),
-                              Image.asset(
-                                'images/ITZ.png',
-                                width: 100,
-                              ),
-                            ],
-                          ),
-                          Text('INSTITUTO TECNOLOGICO DE ZACATEPEC ITZ',
-                              style: GoogleFonts.arimo(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              )),
-                          Padding(padding: const EdgeInsets.all(10.0)),
-                          Text(
-                            'DOCENTE: ALEJANDRA CALYPSO ',
-                            style: GoogleFonts.arimo(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Padding(padding: const EdgeInsets.all(10.0)),
-                          Text(
-                            'ASIGNATURA: INGENIERIA DE SOFTWARE',
-                            style: GoogleFonts.arimo(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Padding(padding: const EdgeInsets.all(10.0)),
-                          Text(
-                            'PERIODO: ENERO-FEBRERO 2025',
-                            style: GoogleFonts.arimo(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Padding(padding: const EdgeInsets.all(10.0)),
-                          Text(
-                            'GRUPO: XA',
-                            style: GoogleFonts.arimo(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Padding(padding: const EdgeInsets.all(10.0)),
-                          Text(
-                            'Generado el: ${DateTime.now().toString().substring(0, 16)}',
-                            style: GoogleFonts.arimo(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Padding(padding: const EdgeInsets.all(10.0)),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              columns: [
-                                DataColumn(label: Text('Numero Control')),
-                                DataColumn(label: Text('Nombre Alumno')),
-                                DataColumn(label: Text('20-MAY')),
-                                DataColumn(label: Text('15-MAY')),
-                                DataColumn(label: Text('16-MAY')),
-                                DataColumn(label: Text('% Asistencia')),
-                                DataColumn(label: Text('Observaciones')),
-                              ],
-                              rows: [
-                                DataRow(cells: [
-                                  DataCell(Text('2090597')),
-                                  DataCell(Text('Yamil Barbosa')),
-                                  DataCell(Text('✓')),
-                                  DataCell(Text('✗')),
-                                  DataCell(Text('✓')),
-                                  DataCell(Text('66,67%')),
-                                  DataCell(Text('')),
-                                ]),
-                                DataRow(cells: [
-                                  DataCell(Text('2090598')),
-                                  DataCell(Text('Ana García')),
-                                  DataCell(Text('✓')),
-                                  DataCell(Text('✓')),
-                                  DataCell(Text('✗')),
-                                  DataCell(Text('66,67%')),
-                                  DataCell(Text('')),
-                                ]),
-                                DataRow(cells: [
-                                  DataCell(Text('2090599')),
-                                  DataCell(Text('Carlos López')),
-                                  DataCell(Text('✗')),
-                                  DataCell(Text('✓')),
-                                  DataCell(Text('✓')),
-                                  DataCell(Text('66,67%')),
-                                  DataCell(Text('')),
-                                ]),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-        ),
-      )),
-    );
-  }
-}
-
 class FeedbackPage extends StatefulWidget {
   final String? initialSubject; // Para abrir directamente en una materia
-  
+
   const FeedbackPage({super.key, this.initialSubject});
 
   @override
   _FeedbackPageState createState() => _FeedbackPageState();
 }
 
-class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderStateMixin {
+class _FeedbackPageState extends State<FeedbackPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String selectedFilter = 'Todos';
-  final List<String> filters = ['Todos', 'Opiniones', 'Dudas', 'Sugerencias', 'Quejas'];
-  final List<String> subjects = ['Todas', 'Matemáticas', 'Programación', 'Base de Datos', 'Software'];
-  
+  final List<String> filters = [
+    'Todos',
+    'Opiniones',
+    'Dudas',
+    'Sugerencias',
+    'Quejas'
+  ];
+  final List<String> subjects = [
+    'Todas',
+    'Matemáticas',
+    'Programación',
+    'Base de Datos',
+    'Ingenieria de Software'
+  ];
+
   // Mock data de retroalimentación
   List<Map<String, dynamic>> feedbackData = [
     {
@@ -801,7 +698,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       'studentName': 'Juan Pérez',
       'studentId': '18320100',
       'type': 'Opiniones',
-      'message': 'Me gusta mucho la clase de programación, especialmente cuando vemos ejemplos prácticos. Los ejercicios son muy útiles.',
+      'message':
+          'Me gusta mucho la clase de programación, especialmente cuando vemos ejemplos prácticos. Los ejercicios son muy útiles.',
       'date': '2025-05-27 10:30',
       'rating': 5,
       'className': 'Programación',
@@ -812,7 +710,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       'studentName': 'Anónimo',
       'studentId': '',
       'type': 'Dudas',
-      'message': '¿Podrían explicar mejor el tema de recursividad? Me cuesta trabajo entender los casos base.',
+      'message':
+          '¿Podrían explicar mejor el tema de recursividad? Me cuesta trabajo entender los casos base.',
       'date': '2025-05-27 09:15',
       'rating': null,
       'className': 'Programación',
@@ -823,7 +722,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       'studentName': 'María González',
       'studentId': '18320101',
       'type': 'Sugerencias',
-      'message': 'Sería genial si pudiéramos tener más tiempo para los laboratorios prácticos.',
+      'message':
+          'Sería genial si pudiéramos tener más tiempo para los laboratorios prácticos.',
       'date': '2025-05-26 16:45',
       'rating': 4,
       'className': 'Base de Datos',
@@ -834,7 +734,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       'studentName': 'Carlos Rodríguez',
       'studentId': '18320102',
       'type': 'Opiniones',
-      'message': 'Las clases están muy bien estructuradas. Me ayuda mucho la forma en que explican los conceptos.',
+      'message':
+          'Las clases están muy bien estructuradas. Me ayuda mucho la forma en que explican los conceptos.',
       'date': '2025-05-26 14:20',
       'rating': 5,
       'className': 'Software',
@@ -845,7 +746,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       'studentName': 'Anónimo',
       'studentId': '',
       'type': 'Quejas',
-      'message': 'El ritmo de la clase es un poco rápido, a veces no alcanzamos a tomar apuntes.',
+      'message':
+          'El ritmo de la clase es un poco rápido, a veces no alcanzamos a tomar apuntes.',
       'date': '2025-05-25 11:10',
       'rating': 2,
       'className': 'Matemáticas',
@@ -856,7 +758,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       'studentName': 'Ana López',
       'studentId': '18320103',
       'type': 'Dudas',
-      'message': '¿Pueden proporcionar más ejemplos del tema de normalización en bases de datos?',
+      'message':
+          '¿Pueden proporcionar más ejemplos del tema de normalización en bases de datos?',
       'date': '2025-05-25 08:30',
       'rating': null,
       'className': 'Base de Datos',
@@ -867,7 +770,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       'studentName': 'Luis Martín',
       'studentId': '18320104',
       'type': 'Opiniones',
-      'message': 'Los ejercicios de matemáticas están muy bien planteados, me ayudan a entender mejor.',
+      'message':
+          'Los ejercicios de matemáticas están muy bien planteados, me ayudan a entender mejor.',
       'date': '2025-05-24 15:20',
       'rating': 4,
       'className': 'Matemáticas',
@@ -878,10 +782,11 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       'studentName': 'Sofia Cruz',
       'studentId': '18320105',
       'type': 'Sugerencias',
-      'message': 'Podrían usar más herramientas visuales para explicar los algoritmos de software.',
+      'message':
+          'Podrían usar más herramientas visuales para explicar los algoritmos de software.',
       'date': '2025-05-24 11:45',
       'rating': 3,
-      'className': 'Software',
+      'className': 'Ingenieria de Software',
       'isAnonymous': false,
     },
   ];
@@ -890,7 +795,7 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
   void initState() {
     super.initState();
     _tabController = TabController(length: subjects.length, vsync: this);
-    
+
     // Si se pasa una materia inicial, cambiar al tab correspondiente
     if (widget.initialSubject != null) {
       int initialIndex = subjects.indexOf(widget.initialSubject!);
@@ -908,19 +813,23 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
 
   List<Map<String, dynamic>> getFilteredFeedback(String subject) {
     List<Map<String, dynamic>> subjectFiltered;
-    
+
     // Filtrar por materia
     if (subject == 'Todas') {
       subjectFiltered = feedbackData;
     } else {
-      subjectFiltered = feedbackData.where((feedback) => feedback['className'] == subject).toList();
+      subjectFiltered = feedbackData
+          .where((feedback) => feedback['className'] == subject)
+          .toList();
     }
-    
+
     // Filtrar por tipo
     if (selectedFilter == 'Todos') {
       return subjectFiltered;
     }
-    return subjectFiltered.where((feedback) => feedback['type'] == selectedFilter).toList();
+    return subjectFiltered
+        .where((feedback) => feedback['type'] == selectedFilter)
+        .toList();
   }
 
   Map<String, int> getSubjectStats(String subject) {
@@ -928,14 +837,17 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
     if (subject == 'Todas') {
       subjectData = feedbackData;
     } else {
-      subjectData = feedbackData.where((feedback) => feedback['className'] == subject).toList();
+      subjectData = feedbackData
+          .where((feedback) => feedback['className'] == subject)
+          .toList();
     }
-    
+
     return {
       'total': subjectData.length,
       'opiniones': subjectData.where((f) => f['type'] == 'Opiniones').length,
       'dudas': subjectData.where((f) => f['type'] == 'Dudas').length,
-      'sugerencias': subjectData.where((f) => f['type'] == 'Sugerencias').length,
+      'sugerencias':
+          subjectData.where((f) => f['type'] == 'Sugerencias').length,
       'quejas': subjectData.where((f) => f['type'] == 'Quejas').length,
     };
   }
@@ -946,6 +858,7 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       appBar: AppBar(
         title: const Text('Retroalimentación de Estudiantes'),
         backgroundColor: azulOscuro,
+        foregroundColor: Colors.white,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
@@ -960,7 +873,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
         color: azulClaro.withOpacity(0.08),
         child: TabBarView(
           controller: _tabController,
-          children: subjects.map((subject) => _buildSubjectView(subject)).toList(),
+          children:
+              subjects.map((subject) => _buildSubjectView(subject)).toList(),
         ),
       ),
     );
@@ -969,7 +883,7 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
   Widget _buildSubjectView(String subject) {
     final stats = getSubjectStats(subject);
     final filteredData = getFilteredFeedback(subject);
-    
+
     return Column(
       children: [
         // Header con estadísticas específicas de la materia
@@ -999,10 +913,14 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatItem('Total', stats['total']!, Icons.comment, azul),
-                      _buildStatItem('Opiniones', stats['opiniones']!, Icons.thumb_up, Colors.green),
-                      _buildStatItem('Dudas', stats['dudas']!, Icons.help, Colors.orange),
-                      _buildStatItem('Sugerencias', stats['sugerencias']!, Icons.lightbulb, Colors.blue),
+                      _buildStatItem(
+                          'Total', stats['total']!, Icons.comment, azul),
+                      _buildStatItem('Opiniones', stats['opiniones']!,
+                          Icons.thumb_up, Colors.green),
+                      _buildStatItem(
+                          'Dudas', stats['dudas']!, Icons.help, Colors.orange),
+                      _buildStatItem('Sugerencias', stats['sugerencias']!,
+                          Icons.lightbulb, Colors.blue),
                     ],
                   ),
                 ],
@@ -1010,7 +928,7 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
             ),
           ),
         ),
-        
+
         // Filtros por tipo
         Container(
           height: 50,
@@ -1042,7 +960,7 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
             },
           ),
         ),
-        
+
         // Lista de retroalimentación filtrada
         Expanded(
           child: filteredData.isEmpty
@@ -1099,7 +1017,7 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
   Widget _buildFeedbackCard(Map<String, dynamic> feedback) {
     Color typeColor = _getTypeColor(feedback['type']);
     IconData typeIcon = _getTypeIcon(feedback['type']);
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -1115,7 +1033,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: typeColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -1141,7 +1060,9 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
                   Row(
                     children: List.generate(5, (index) {
                       return Icon(
-                        index < feedback['rating'] ? Icons.star : Icons.star_border,
+                        index < feedback['rating']
+                            ? Icons.star
+                            : Icons.star_border,
                         color: Colors.amber,
                         size: 16,
                       );
@@ -1149,9 +1070,9 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
                   ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Mensaje de retroalimentación
             Text(
               feedback['message'],
@@ -1160,9 +1081,9 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
                 height: 1.4,
               ),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Footer con información del estudiante
             Row(
               children: [
@@ -1170,7 +1091,9 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
                   radius: 16,
                   backgroundColor: azulClaro,
                   child: Icon(
-                    feedback['isAnonymous'] ? Icons.person_outline : Icons.person,
+                    feedback['isAnonymous']
+                        ? Icons.person_outline
+                        : Icons.person,
                     size: 18,
                     color: Colors.white,
                   ),
@@ -1187,7 +1110,8 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
                           fontSize: 14,
                         ),
                       ),
-                      if (!feedback['isAnonymous'] && feedback['studentId'].isNotEmpty)
+                      if (!feedback['isAnonymous'] &&
+                          feedback['studentId'].isNotEmpty)
                         Text(
                           feedback['studentId'],
                           style: TextStyle(
@@ -1259,5 +1183,747 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
   String _formatDate(String dateStr) {
     DateTime date = DateTime.parse(dateStr);
     return '${date.day}/${date.month} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+//______________________
+
+class AttendanceReportPDF {
+  // Modelo de datos para el alumno
+  static List<Map<String, dynamic>> studentsData = [
+    {
+      'numeroControl': '2090597',
+      'nombreAlumno': 'Yamil Barbosa',
+      'asistencias': {'20-MAY': true, '15-MAY': false, '16-MAY': true},
+      'porcentajeAsistencia': '66,67%',
+      'observaciones': '',
+    },
+    {
+      'numeroControl': '2090598',
+      'nombreAlumno': 'Ana García',
+      'asistencias': {'20-MAY': true, '15-MAY': true, '16-MAY': false},
+      'porcentajeAsistencia': '66,67%',
+      'observaciones': '',
+    },
+    {
+      'numeroControl': '2090599',
+      'nombreAlumno': 'Carlos López',
+      'asistencias': {'20-MAY': false, '15-MAY': true, '16-MAY': true},
+      'porcentajeAsistencia': '66,67%',
+      'observaciones': '',
+    },
+  ];
+
+  static Future<Uint8List> generateAttendanceReport() async {
+    final pdf = pw.Document();
+
+    // Crear el PDF
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return [
+            // Encabezado del reporte
+            _buildHeader(),
+            pw.SizedBox(height: 20),
+
+            // Información general
+            _buildGeneralInfo(),
+            pw.SizedBox(height: 20),
+
+            // Tabla de asistencia
+            _buildAttendanceTable(),
+            pw.SizedBox(height: 20),
+
+            // Resumen estadístico
+            _buildStatisticsSummary(),
+            pw.SizedBox(height: 20),
+
+            // Pie de página
+          ];
+        },
+      ),
+    );
+
+    // Retornar los bytes del PDF
+    return pdf.save();
+  }
+
+  static pw.Widget _buildHeader() {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(16),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.blue100,
+        border: pw.Border.all(color: PdfColors.blue300),
+        borderRadius: pw.BorderRadius.circular(8),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          pw.Text(
+            'REPORTE DE ASISTENCIA',
+            style: pw.TextStyle(
+              fontSize: 24,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.blue800,
+            ),
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text(
+            'Control de Asistencia Estudiantil',
+            style: pw.TextStyle(fontSize: 14, color: PdfColors.blue600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildGeneralInfo() {
+    final now = DateTime.now();
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PdfColors.grey300),
+        borderRadius: pw.BorderRadius.circular(4),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Asignatura:',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text('INGENIERIA DE SOWFTA'),
+                ],
+              ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'GRUPO:',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text('XA'),
+                ],
+              ),
+            ],
+          ),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Fecha de generación:',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text('${now.day}/${now.month}/${now.year}'),
+                ],
+              ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Total de estudiantes:',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text('${studentsData.length}'),
+                ],
+              ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Período:',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text('Semana: ${AutomaticWeekPDF.getCurrentWeekRange()}')
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildAttendanceTable() {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'Registro de Asistencias',
+          style: pw.TextStyle(
+            fontSize: 18,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.blue800,
+          ),
+        ),
+        pw.SizedBox(height: 10),
+        pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey600),
+          columnWidths: const {
+            0: pw.FixedColumnWidth(80),
+            1: pw.FlexColumnWidth(3),
+            2: pw.FixedColumnWidth(60),
+            3: pw.FixedColumnWidth(60),
+            4: pw.FixedColumnWidth(60),
+            5: pw.FixedColumnWidth(80),
+            6: pw.FlexColumnWidth(2),
+          },
+          children: [
+            // Encabezado de la tabla
+            pw.TableRow(
+              decoration: const pw.BoxDecoration(color: PdfColors.blue800),
+              children: [
+                _buildTableCell('N° Control', isHeader: true),
+                _buildTableCell('Nombre Alumno', isHeader: true),
+                _buildTableCell('20-MAY', isHeader: true),
+                _buildTableCell('15-MAY', isHeader: true),
+                _buildTableCell('16-MAY', isHeader: true),
+                _buildTableCell('% Asist.', isHeader: true),
+                _buildTableCell('Observaciones', isHeader: true),
+              ],
+            ),
+            // Filas de datos
+            ...studentsData.asMap().entries.map((entry) {
+              final index = entry.key;
+              final student = entry.value;
+              return pw.TableRow(
+                decoration: pw.BoxDecoration(
+                  color: index % 2 == 0 ? PdfColors.grey100 : PdfColors.white,
+                ),
+                children: [
+                  _buildTableCell(student['numeroControl'] ?? ''),
+                  _buildTableCell(student['nombreAlumno'] ?? ''),
+                  _buildTableCell(
+                    student['asistencias']['20-MAY'] == true ? 'X' : '-',
+                  ),
+                  _buildTableCell(
+                    student['asistencias']['15-MAY'] == true ? 'X' : '-',
+                  ),
+                  _buildTableCell(
+                    student['asistencias']['16-MAY'] == true ? 'X' : '-',
+                  ),
+                  _buildTableCell(student['porcentajeAsistencia'] ?? ''),
+                  _buildTableCell(student['observaciones'] ?? ''),
+                ],
+              );
+            })
+          ],
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(8),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontSize: isHeader ? 10 : 9,
+          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+          color: isHeader ? PdfColors.white : PdfColors.black,
+        ),
+        textAlign: pw.TextAlign.center,
+      ),
+    );
+  }
+
+  static pw.Widget _buildStatisticsSummary() {
+    // Calcular estadísticas
+    int totalStudents = studentsData.length;
+    int totalClasses = 3; // 20-MAY, 15-MAY, 16-MAY
+
+    Map<String, int> dailyAttendance = {'20-MAY': 0, '15-MAY': 0, '16-MAY': 0};
+
+    for (var student in studentsData) {
+      for (var date in dailyAttendance.keys) {
+        if (student['asistencias'][date] == true) {
+          dailyAttendance[date] = dailyAttendance[date]! + 1;
+        }
+      }
+    }
+
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(16),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.green50,
+        border: pw.Border.all(color: PdfColors.green300),
+        borderRadius: pw.BorderRadius.circular(8),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'Resumen Estadístico',
+            style: pw.TextStyle(
+              fontSize: 16,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.green800,
+            ),
+          ),
+          pw.SizedBox(height: 10),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatCard('Total Estudiantes', '$totalStudents'),
+              _buildStatCard('Clases Impartidas', '$totalClasses'),
+              _buildStatCard('Promedio Asistencia', '66.67%'),
+            ],
+          ),
+          pw.SizedBox(height: 10),
+          pw.Text(
+            'Asistencia por día:',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
+          ...dailyAttendance.entries.map(
+            (entry) => pw.Text(
+              '${entry.key}: ${entry.value}/$totalStudents estudiantes',
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildStatCard(String title, String value) {
+    return pw.Column(
+      children: [
+        pw.Text(
+          value,
+          style: pw.TextStyle(
+            fontSize: 20,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.green800,
+          ),
+        ),
+        pw.Text(
+          title,
+          style: const pw.TextStyle(fontSize: 10, color: PdfColors.green600),
+        ),
+      ],
+    );
+  }
+}
+
+// Widget Flutter simplificado
+class AttendanceReportScreen extends StatefulWidget {
+  const AttendanceReportScreen({Key? key}) : super(key: key);
+
+  @override
+  _AttendanceReportScreenState createState() => _AttendanceReportScreenState();
+}
+
+class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
+  bool isGenerating = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reporte de Asistencia'),
+        backgroundColor: azulOscuro,
+        foregroundColor: Colors.white,
+      ),
+      backgroundColor: Colors.white38,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Center(
+            child: Container(
+              constraints: BoxConstraints(maxHeight: 850, maxWidth: 390),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(198, 245, 245, 247),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Image.asset('images/TecNM.png', width: 100),
+                      SizedBox(width: 20),
+                      Image.asset('images/ITZ.png', width: 100),
+                    ],
+                  ),
+                  Text(
+                    'INSTITUTO TECNOLOGICO DE ZACATEPEC ITZ',
+                    style: GoogleFonts.arimo(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Padding(padding: const EdgeInsets.all(10.0)),
+                  Text(
+                    'DOCENTE: ALEJANDRA CALYPSO ',
+                    style: GoogleFonts.arimo(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Padding(padding: const EdgeInsets.all(10.0)),
+                  Text(
+                    'ASIGNATURA: IGENIERIA DE SOFTWARE',
+                    style: GoogleFonts.arimo(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Padding(padding: const EdgeInsets.all(10.0)),
+                  Text(
+                    'PERIODO: ENERO-FEBRERO 2025',
+                    style: GoogleFonts.arimo(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Padding(padding: const EdgeInsets.all(10.0)),
+                  Text(
+                    'GRUPO: XA',
+                    style: GoogleFonts.arimo(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Padding(padding: const EdgeInsets.all(10.0)),
+                  Text(
+                    'Generado el: ${DateTime.now().toString().substring(0, 16)}',
+                    style: GoogleFonts.arimo(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Padding(padding: const EdgeInsets.all(10.0)),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        headingRowColor: MaterialStateProperty.all(azulITZ),
+                        headingTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        columns: const [
+                          DataColumn(label: Text('Numero Control')),
+                          DataColumn(label: Text('Nombre Alumno')),
+                          DataColumn(label: Text('20-MAY')),
+                          DataColumn(label: Text('15-MAY')),
+                          DataColumn(label: Text('16-MAY')),
+                          DataColumn(label: Text('% Asistencia')),
+                          DataColumn(label: Text('Observaciones')),
+                        ],
+                        rows: const [
+                          DataRow(
+                            cells: [
+                              DataCell(Text('2090597')),
+                              DataCell(Text('Yamil Barbosa')),
+                              DataCell(
+                                Text(
+                                  '✓',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '✗',
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '✓',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(Text('66,67%')),
+                              DataCell(Text('')),
+                            ],
+                          ),
+                          DataRow(
+                            cells: [
+                              DataCell(Text('2090598')),
+                              DataCell(Text('Ana García')),
+                              DataCell(
+                                Text(
+                                  '✓',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '✓',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '✗',
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(Text('66,67%')),
+                              DataCell(Text('')),
+                            ],
+                          ),
+                          DataRow(
+                            cells: [
+                              DataCell(Text('2090599')),
+                              DataCell(Text('Carlos López')),
+                              DataCell(
+                                Text(
+                                  '✗',
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '✓',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '✓',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(Text('66,67%')),
+                              DataCell(Text('')),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Botones de acción
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: isGenerating ? null : _previewPDF,
+                        icon: isGenerating
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.preview),
+                        label: Text(
+                            isGenerating ? 'Generando...' : 'Vista Previa'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[800],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                      Padding(padding: const EdgeInsets.all(10.0)),
+                      ElevatedButton.icon(
+                        onPressed: isGenerating ? null : _sharePDF,
+                        icon: const Icon(Icons.download),
+                        label: const Text('Descargar Reporte de Asistencia'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[600],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _previewPDF() async {
+    setState(() {
+      isGenerating = true;
+    });
+
+    try {
+      final pdfBytes = await AttendanceReportPDF.generateAttendanceReport();
+
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdfBytes,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vista previa generada exitosamente'),
+            backgroundColor: Color.fromARGB(255, 47, 74, 131),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al generar vista previa: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isGenerating = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _sharePDF() async {
+    setState(() {
+      isGenerating = true;
+    });
+
+    try {
+      final pdfBytes = await AttendanceReportPDF.generateAttendanceReport();
+
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: 'reporte_asistencia.pdf',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Reporte descargado exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al descargar PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isGenerating = false;
+        });
+      }
+    }
+  }
+}
+
+class AutomaticWeekPDF {
+  /// Obtiene el rango de la semana actual en formato "dd-MMM"
+  static String getCurrentWeekRange() {
+    DateTime now = DateTime.now();
+
+    // Encontrar el lunes de esta semana
+    DateTime monday = now.subtract(Duration(days: now.weekday - 1));
+
+    // El viernes de esta semana
+    DateTime friday = monday.add(Duration(days: 4));
+
+    // Formato dd-MMM (15-MAY, 20-MAY)
+    String mondayStr =
+        DateFormat('dd-MMM', 'es_ES').format(monday).toUpperCase();
+    String fridayStr =
+        DateFormat('dd-MMM', 'es_ES').format(friday).toUpperCase();
+
+    return '$mondayStr a $fridayStr';
+  }
+
+  /// Obtiene una semana específica (útil para reportes de semanas pasadas)
+  static String getWeekRange(DateTime referenceDate) {
+    // Encontrar el lunes de la semana de la fecha de referencia
+    DateTime monday =
+        referenceDate.subtract(Duration(days: referenceDate.weekday - 1));
+    DateTime friday = monday.add(Duration(days: 4));
+
+    String mondayStr =
+        DateFormat('dd-MMM', 'es_ES').format(monday).toUpperCase();
+    String fridayStr =
+        DateFormat('dd-MMM', 'es_ES').format(friday).toUpperCase();
+
+    return '$mondayStr a $fridayStr';
+  }
+
+  /// Obtiene las fechas individuales de la semana actual para usar en columnas
+  static List<String> getCurrentWeekDates() {
+    DateTime now = DateTime.now();
+    DateTime monday = now.subtract(Duration(days: now.weekday - 1));
+
+    List<String> dates = [];
+    for (int i = 0; i < 5; i++) {
+      // Lunes a Viernes
+      DateTime day = monday.add(Duration(days: i));
+      String dateStr = DateFormat('dd-MMM', 'es_ES').format(day).toUpperCase();
+      dates.add(dateStr);
+    }
+
+    return dates;
+  }
+
+  /// Obtiene las fechas de una semana específica
+  static List<String> getWeekDates(DateTime referenceDate) {
+    DateTime monday =
+        referenceDate.subtract(Duration(days: referenceDate.weekday - 1));
+
+    List<String> dates = [];
+    for (int i = 0; i < 5; i++) {
+      DateTime day = monday.add(Duration(days: i));
+      String dateStr = DateFormat('dd-MMM', 'es_ES').format(day).toUpperCase();
+      dates.add(dateStr);
+    }
+
+    return dates;
   }
 }
