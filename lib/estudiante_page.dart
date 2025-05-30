@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:check_list/auth/inicio_sesion.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -523,24 +525,56 @@ class _EscanerQRState extends State<EscanerQR> {
 
   Future<void> _registrarAsistencia(String qrData) async {
     String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    String nombre = FirebaseAuth.instance.currentUser?.displayName ?? 'Estudiante';
+    String correo = FirebaseAuth.instance.currentUser?.email ?? '';
 
-    List<String> qrParts = qrData.split(',');
-    if (qrParts.length != 3) throw Exception('Código QR inválido');
+    // Decodifica el QR (espera un JSON)
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(qrData);
+    } catch (e) {
+      throw Exception('Código QR inválido');
+    }
 
-    String materiaId = qrParts[0];
-    String claseFecha = qrParts[1];
-    String profesorId = qrParts[2];
+    String claseId = data['claseId'];
+    String materia = data['materia'] ?? 'Materia';
+    String grupo = data['grupo'] ?? 'Grupo';
 
-    await FirebaseFirestore.instance
-        .collection('Asistencias')
-        .doc('${uid}_${materiaId}_$claseFecha')
-        .set({
-      'estudianteId': uid,
-      'materiaId': materiaId,
-      'profesorId': profesorId,
+    // Verifica si ya está registrado
+    final docRef = FirebaseFirestore.instance
+        .collection('clases')
+        .doc(claseId)
+        .collection('asistencias')
+        .doc(uid);
+
+    final doc = await docRef.get();
+    if (doc.exists) {
+      throw Exception('Ya registraste tu asistencia en esta clase');
+    }
+
+    // Registra la asistencia
+    await docRef.set({
+      'uid': uid,
+      'nombre': nombre,
+      'correo': correo,
+      'materia': materia,
+      'grupo': grupo,
       'fecha': DateTime.now(),
-      'presente': true,
-      'horaRegistro': DateTime.now(),
+    });
+
+    // Opcional: Puedes guardar también en /Registro/Estudiantes/Usuarios/uid/asistencias
+    await FirebaseFirestore.instance
+        .collection('Registro')
+        .doc('Estudiantes')
+        .collection('Usuarios')
+        .doc(uid)
+        .collection('asistencias')
+        .doc(claseId)
+        .set({
+      'claseId': claseId,
+      'materia': materia,
+      'grupo': grupo,
+      'fecha': DateTime.now(),
     });
   }
 
@@ -1240,3 +1274,4 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
     super.dispose();
   }
 }
+

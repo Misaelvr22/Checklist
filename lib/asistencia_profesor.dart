@@ -2223,322 +2223,320 @@ class _AddClassScreenState extends State<AddClassScreen> {
 
   Widget _buildQRView() {
     final qrData = jsonEncode({
-      'tipo': 'registro_clase',
+      'claseId': _claseId,
       'codigo_clase': _codigoClase,
-      'clase_id': _claseId, // Incluir ID de Firebase
       'materia': _selectedMateria,
       'grupo': _grupoController.text,
-      'docente':
-          _docentes.firstWhere((d) => d['id'] == _selectedDocente)['nombre'],
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
     });
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Header de éxito
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.green[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.green[200]!),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                Icons.check_circle,
-                color: Colors.green[600],
-                size: 48,
-              ),
-              SizedBox(height: 12),
-              Text(
-                '¡Clase Creada y Guardada!',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[700],
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Los datos están almacenados en Firebase',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Header de éxito
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green[200]!),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.check_circle,
                   color: Colors.green[600],
+                  size: 48,
                 ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Los alumnos pueden escanear este QR para registrarse',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.green[600],
+                SizedBox(height: 12),
+                Text(
+                  '¡Clase Creada y Guardada!',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[700],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-
-        SizedBox(height: 24),
-
-        // Estadísticas en tiempo real
-        if (_claseId != null)
-          StreamBuilder<DocumentSnapshot>(
-            stream: _obtenerEstadisticasClase(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data!.exists) {
-                final data = snapshot.data!.data() as Map<String, dynamic>;
-                final totalEstudiantes = data['total_estudiantes'] ?? 0;
-                final activa = data['activa'] ?? false;
-
-                return Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(16),
-                  margin: EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: activa ? Colors.blue[50] : Colors.orange[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color:
-                            activa ? Colors.blue[200]! : Colors.orange[200]!),
+                SizedBox(height: 8),
+                Text(
+                  'Los datos están almacenados en Firebase',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.green[600],
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        activa ? Icons.circle : Icons.pause_circle,
-                        color: activa ? Colors.green : Colors.orange,
-                        size: 20,
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Estado: ${activa ? "Activa" : "Pausada"}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: activa
-                                    ? Colors.blue[700]
-                                    : Colors.orange[700],
-                              ),
-                            ),
-                            Text(
-                              'Estudiantes registrados: $totalEstudiantes',
-                              style: TextStyle(
-                                color: activa
-                                    ? Colors.blue[600]
-                                    : Colors.orange[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Los alumnos pueden escanear este QR para registrarse',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.green[600],
                   ),
-                );
-              }
-              return SizedBox.shrink();
-            },
+                ),
+              ],
+            ),
           ),
 
-        // Información de la clase
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.cloud_done, color: Colors.green[600], size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Detalles de la Clase:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+          SizedBox(height: 24),
+
+          // Estadísticas en tiempo real
+          if (_claseId != null)
+            StreamBuilder<DocumentSnapshot>(
+              stream: _obtenerEstadisticasClase(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data!.exists) {
+                  final data = snapshot.data!.data() as Map<String, dynamic>;
+                  final totalEstudiantes = data['total_estudiantes'] ?? 0;
+                  final activa = data['activa'] ?? false;
+
+                  return Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16),
+                    margin: EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: activa ? Colors.blue[50] : Colors.orange[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color:
+                              activa ? Colors.blue[200]! : Colors.orange[200]!),
                     ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12),
-              _buildInfoRow('Materia:', _selectedMateria!),
-              _buildInfoRow('Grupo:', _grupoController.text),
-              _buildInfoRow(
-                  'Docente:',
-                  _docentes.firstWhere(
-                      (d) => d['id'] == _selectedDocente)['nombre']!),
-              _buildInfoRow('Código:', _codigoClase!),
-              _buildInfoRow('ID Firebase:', _claseId ?? 'Generando...'),
-              _buildInfoRow('Fecha:',
-                  '${_fechaCreacion.day}/${_fechaCreacion.month}/${_fechaCreacion.year} ${_fechaCreacion.hour.toString().padLeft(2, '0')}:${_fechaCreacion.minute.toString().padLeft(2, '0')}'),
-            ],
-          ),
-        ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          activa ? Icons.circle : Icons.pause_circle,
+                          color: activa ? Colors.green : Colors.orange,
+                          size: 20,
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Estado: ${activa ? "Activa" : "Pausada"}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: activa
+                                      ? Colors.blue[700]
+                                      : Colors.orange[700],
+                                ),
+                              ),
+                              Text(
+                                'Estudiantes registrados: $totalEstudiantes',
+                                style: TextStyle(
+                                  color: activa
+                                      ? Colors.blue[600]
+                                      : Colors.orange[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return SizedBox.shrink();
+              },
+            ),
 
-        SizedBox(height: 24),
-
-        // Código QR
-        Container(
-          padding: EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 2,
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Text(
-                'Código QR para Registro',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
-                ),
-              ),
-              SizedBox(height: 16),
-              QrImageView(
-                data: qrData,
-                version: QrVersions.auto,
-                size: 200.0,
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-              ),
-              SizedBox(height: 16),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          // Información de la clase
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Icon(Icons.qr_code, color: Colors.grey[600], size: 20),
+                    Icon(Icons.cloud_done, color: Colors.green[600], size: 20),
                     SizedBox(width: 8),
                     Text(
-                      'Código: $_codigoClase',
+                      'Detalles de la Clase:',
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
                         color: Colors.grey[700],
                       ),
                     ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                _buildInfoRow('Materia:', _selectedMateria!),
+                _buildInfoRow('Grupo:', _grupoController.text),
+                _buildInfoRow(
+                    'Docente:',
+                    _docentes.firstWhere(
+                        (d) => d['id'] == _selectedDocente)['nombre']!),
+                _buildInfoRow('Código:', _codigoClase!),
+                _buildInfoRow('ID Firebase:', _claseId ?? 'Generando...'),
+                _buildInfoRow('Fecha:',
+                    '${_fechaCreacion.day}/${_fechaCreacion.month}/${_fechaCreacion.year} ${_fechaCreacion.hour.toString().padLeft(2, '0')}:${_fechaCreacion.minute.toString().padLeft(2, '0')}'),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 24),
+
+          // Código QR
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 2,
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Código QR para Registro',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                SizedBox(height: 16),
+                QrImageView(
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: 200.0,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                ),
+                SizedBox(height: 16),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.qr_code, color: Colors.grey[600], size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Código: $_codigoClase',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      IconButton(
+                        onPressed: _copiarCodigo,
+                        icon: Icon(Icons.copy, size: 20),
+                        tooltip: 'Copiar código',
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 24),
+
+          // Instrucciones
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue[600]),
                     SizedBox(width: 8),
-                    IconButton(
-                      onPressed: _copiarCodigo,
-                      icon: Icon(Icons.copy, size: 20),
-                      tooltip: 'Copiar código',
-                      visualDensity: VisualDensity.compact,
+                    Text(
+                      'Instrucciones para Alumnos:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[700],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                SizedBox(height: 12),
+                Text(
+                  '1. Abrir la aplicación de estudiantes\n'
+                  '2. Seleccionar "Registrarse a Clase"\n'
+                  '3. Escanear este código QR\n'
+                  '4. Confirmar registro en la clase\n'
+                  '5. El registro se guardará automáticamente',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.blue[600],
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
 
-        SizedBox(height: 24),
+          SizedBox(height: 32),
 
-        // Instrucciones
-        Container(
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.blue[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.blue[200]!),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Botones de acción
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.blue[600]),
-                  SizedBox(width: 8),
-                  Text(
-                    'Instrucciones para Alumnos:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue[700],
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.arrow_back),
+                  label: Text('Volver'),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey[400]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ],
+                ),
               ),
-              SizedBox(height: 12),
-              Text(
-                '1. Abrir la aplicación de estudiantes\n'
-                '2. Seleccionar "Registrarse a Clase"\n'
-                '3. Escanear este código QR\n'
-                '4. Confirmar registro en la clase\n'
-                '5. El registro se guardará automáticamente',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.blue[600],
-                  height: 1.5,
+              SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _crearNuevaClase,
+                  icon: Icon(Icons.add),
+                  label: Text('Nueva Clase'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-
-        SizedBox(height: 32),
-
-        // Botones de acción
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.arrow_back),
-                label: Text('Volver'),
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: Colors.grey[400]!),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _crearNuevaClase,
-                icon: Icon(Icons.add),
-                label: Text('Nueva Clase'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[700],
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 
