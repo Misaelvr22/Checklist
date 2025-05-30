@@ -1,4 +1,3 @@
-import 'package:check_list/asistencia_profesor.dart';
 import 'package:check_list/dashboard_admin.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';

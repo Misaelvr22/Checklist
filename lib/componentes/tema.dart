@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 var sb5 = SizedBox(height: 5);
 var sb13 = SizedBox(height: 13);
 var sb10 = SizedBox(height: 10);
+var sb20 = SizedBox(height: 20);
 var sb25 = SizedBox(height: 25);
 var sb30 = SizedBox(height: 30);
 var sb40 = SizedBox(height: 40);

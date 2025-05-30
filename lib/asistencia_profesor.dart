@@ -1,7 +1,10 @@
 import 'dart:core';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +16,7 @@ import 'dart:typed_data'; // <-- IMPORTANTE
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
 
 class PaginaProfesor extends StatefulWidget {
   const PaginaProfesor({super.key});
@@ -194,8 +198,7 @@ class _PaginaProfesorState extends State<PaginaProfesor> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    QRGeneratorPage(className: selectedClass),
+                                builder: (context) => AddClassScreen(),
                               ),
                             );
                           },
@@ -1924,5 +1927,937 @@ class AutomaticWeekPDF {
     }
 
     return dates;
+  }
+}
+
+class AddClassScreen extends StatefulWidget {
+  const AddClassScreen({Key? key}) : super(key: key);
+
+  @override
+  State<AddClassScreen> createState() => _AddClassScreenState();
+}
+
+class _AddClassScreenState extends State<AddClassScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _grupoController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  String? _selectedMateria;
+  String? _selectedDocente;
+  DateTime _fechaCreacion = DateTime.now();
+  String? _codigoClase;
+  String? _claseId; // ID del documento en Firestore
+  bool _claseCreada = false;
+  bool _guardandoClase = false; // Para mostrar loading
+
+  // Lista de materias
+  final List<String> _materias = [
+    'Matemáticas',
+    'Física',
+    'Química',
+    'Historia',
+    'Literatura',
+    'Inglés',
+    'Biología',
+    'Geografía',
+    'Educación Física',
+    'Arte',
+  ];
+
+  // Lista de docentes
+  final List<Map<String, String>> _docentes = [
+    {'id': '1', 'nombre': 'Yamil Barbosa Aguilar'},
+    {'id': '2', 'nombre': '22090597'},
+    {'id': '3', 'nombre': 'l22090597@zacatepec.tecnamex.mx'},
+    {'id': '4', 'nombre': 'Lic. Ana Martínez'},
+    {'id': '5', 'nombre': 'Prof. Luis Hernández'},
+    {'id': '6', 'nombre': 'Dra. Carmen López'},
+    {'id': '7', 'nombre': 'Mtro. Roberto Silva'},
+    {'id': '8', 'nombre': 'Lic. Patricia Ruiz'},
+  ];
+
+  @override
+  void dispose() {
+    _grupoController.dispose();
+    super.dispose();
+  }
+
+  String _generarCodigoClase() {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final random = (timestamp % 10000).toString().padLeft(4, '0');
+    return 'CLS$random';
+  }
+
+  // Método para guardar la clase en Firebase
+  Future<void> _guardarClaseEnFirebase() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
+      final docenteSeleccionado = _docentes.firstWhere(
+        (docente) => docente['id'] == _selectedDocente,
+      );
+
+      final nuevaClase = {
+        'codigo_clase': _codigoClase,
+        'materia': _selectedMateria,
+        'grupo': _grupoController.text,
+        'docente_id': _selectedDocente,
+        'docente_nombre': docenteSeleccionado['nombre'],
+        'fecha_creacion': Timestamp.fromDate(_fechaCreacion),
+        'activa': true,
+        'creado_por': user.uid, // ID del usuario que creó la clase
+        'creado_por_email': user.email,
+        'estudiantes_registrados': [], // Lista de IDs de estudiantes
+        'total_estudiantes': 0,
+        'fecha_actualizacion': Timestamp.fromDate(DateTime.now()),
+      };
+
+      // Guardar en Firestore
+      DocumentReference docRef =
+          await _firestore.collection('clases').add(nuevaClase);
+
+      _claseId = docRef.id;
+
+      print('Clase guardada en Firebase con ID: $_claseId');
+    } catch (e) {
+      print('Error al guardar clase en Firebase: $e');
+      throw e;
+    }
+  }
+
+  // Método principal para guardar clase
+  Future<void> _guardarClase() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _guardandoClase = true;
+      });
+
+      try {
+        _codigoClase = _generarCodigoClase();
+
+        // Guardar en Firebase
+        await _guardarClaseEnFirebase();
+
+        setState(() {
+          _claseCreada = true;
+          _guardandoClase = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('¡Clase creada y guardada exitosamente!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } catch (e) {
+        setState(() {
+          _guardandoClase = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar la clase: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
+  // Método para actualizar el estado de la clase
+  Future<void> _actualizarEstadoClase({bool? activa}) async {
+    if (_claseId == null) return;
+
+    try {
+      await _firestore.collection('clases').doc(_claseId).update({
+        'activa': activa ?? !_claseCreada,
+        'fecha_actualizacion': Timestamp.fromDate(DateTime.now()),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Estado de la clase actualizado'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al actualizar estado: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _limpiarFormulario() {
+    setState(() {
+      _selectedMateria = null;
+      _selectedDocente = null;
+      _grupoController.clear();
+      _fechaCreacion = DateTime.now();
+      _codigoClase = null;
+      _claseId = null;
+      _claseCreada = false;
+      _guardandoClase = false;
+    });
+  }
+
+  void _copiarCodigo() {
+    if (_codigoClase != null) {
+      Clipboard.setData(ClipboardData(text: _codigoClase!));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Código copiado al portapapeles'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _crearNuevaClase() {
+    _limpiarFormulario();
+  }
+
+  // Método para obtener estadísticas en tiempo real
+  Stream<DocumentSnapshot> _obtenerEstadisticasClase() {
+    if (_claseId == null) {
+      return Stream.empty();
+    }
+    return _firestore.collection('clases').doc(_claseId).snapshots();
+  }
+
+  String _formatearFecha(DateTime fecha) {
+    final meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre'
+    ];
+    final dias = [
+      'lunes',
+      'martes',
+      'miércoles',
+      'jueves',
+      'viernes',
+      'sábado',
+      'domingo'
+    ];
+
+    final diaSemana = dias[fecha.weekday - 1];
+    final dia = fecha.day;
+    final mes = meses[fecha.month - 1];
+    final ano = fecha.year;
+
+    return '$diaSemana, $dia de $mes de $ano';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Añadir Nueva Clase'),
+        backgroundColor: Colors.blue[700],
+        foregroundColor: Colors.white,
+        elevation: 2,
+        actions: _claseCreada
+            ? [
+                PopupMenuButton<String>(
+                  onSelected: (value) async {
+                    switch (value) {
+                      case 'desactivar':
+                        await _actualizarEstadoClase(activa: false);
+                        break;
+                      case 'activar':
+                        await _actualizarEstadoClase(activa: true);
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'desactivar',
+                      child: Row(
+                        children: [
+                          Icon(Icons.pause_circle_outline,
+                              color: Colors.orange),
+                          SizedBox(width: 8),
+                          Text('Desactivar Clase'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'activar',
+                      child: Row(
+                        children: [
+                          Icon(Icons.play_circle_outline, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text('Activar Clase'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ]
+            : null,
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: _claseCreada ? _buildQRView() : _buildFormulario(),
+      ),
+    );
+  }
+
+  Widget _buildQRView() {
+    final qrData = jsonEncode({
+      'tipo': 'registro_clase',
+      'codigo_clase': _codigoClase,
+      'clase_id': _claseId, // Incluir ID de Firebase
+      'materia': _selectedMateria,
+      'grupo': _grupoController.text,
+      'docente':
+          _docentes.firstWhere((d) => d['id'] == _selectedDocente)['nombre'],
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Header de éxito
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.green[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.green[200]!),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.green[600],
+                size: 48,
+              ),
+              SizedBox(height: 12),
+              Text(
+                '¡Clase Creada y Guardada!',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[700],
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Los datos están almacenados en Firebase',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.green[600],
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Los alumnos pueden escanear este QR para registrarse',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.green[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(height: 24),
+
+        // Estadísticas en tiempo real
+        if (_claseId != null)
+          StreamBuilder<DocumentSnapshot>(
+            stream: _obtenerEstadisticasClase(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data!.exists) {
+                final data = snapshot.data!.data() as Map<String, dynamic>;
+                final totalEstudiantes = data['total_estudiantes'] ?? 0;
+                final activa = data['activa'] ?? false;
+
+                return Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16),
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: activa ? Colors.blue[50] : Colors.orange[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color:
+                            activa ? Colors.blue[200]! : Colors.orange[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        activa ? Icons.circle : Icons.pause_circle,
+                        color: activa ? Colors.green : Colors.orange,
+                        size: 20,
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Estado: ${activa ? "Activa" : "Pausada"}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: activa
+                                    ? Colors.blue[700]
+                                    : Colors.orange[700],
+                              ),
+                            ),
+                            Text(
+                              'Estudiantes registrados: $totalEstudiantes',
+                              style: TextStyle(
+                                color: activa
+                                    ? Colors.blue[600]
+                                    : Colors.orange[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return SizedBox.shrink();
+            },
+          ),
+
+        // Información de la clase
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.cloud_done, color: Colors.green[600], size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Detalles de la Clase:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12),
+              _buildInfoRow('Materia:', _selectedMateria!),
+              _buildInfoRow('Grupo:', _grupoController.text),
+              _buildInfoRow(
+                  'Docente:',
+                  _docentes.firstWhere(
+                      (d) => d['id'] == _selectedDocente)['nombre']!),
+              _buildInfoRow('Código:', _codigoClase!),
+              _buildInfoRow('ID Firebase:', _claseId ?? 'Generando...'),
+              _buildInfoRow('Fecha:',
+                  '${_fechaCreacion.day}/${_fechaCreacion.month}/${_fechaCreacion.year} ${_fechaCreacion.hour.toString().padLeft(2, '0')}:${_fechaCreacion.minute.toString().padLeft(2, '0')}'),
+            ],
+          ),
+        ),
+
+        SizedBox(height: 24),
+
+        // Código QR
+        Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 2,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Código QR para Registro',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[700],
+                ),
+              ),
+              SizedBox(height: 16),
+              QrImageView(
+                data: qrData,
+                version: QrVersions.auto,
+                size: 200.0,
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+              ),
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.qr_code, color: Colors.grey[600], size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Código: $_codigoClase',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _copiarCodigo,
+                      icon: Icon(Icons.copy, size: 20),
+                      tooltip: 'Copiar código',
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(height: 24),
+
+        // Instrucciones
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue[200]!),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.blue[600]),
+                  SizedBox(width: 8),
+                  Text(
+                    'Instrucciones para Alumnos:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[700],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12),
+              Text(
+                '1. Abrir la aplicación de estudiantes\n'
+                '2. Seleccionar "Registrarse a Clase"\n'
+                '3. Escanear este código QR\n'
+                '4. Confirmar registro en la clase\n'
+                '5. El registro se guardará automáticamente',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.blue[600],
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(height: 32),
+
+        // Botones de acción
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.arrow_back),
+                label: Text('Volver'),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: Colors.grey[400]!),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _crearNuevaClase,
+                icon: Icon(Icons.add),
+                label: Text('Nueva Clase'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[700],
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormulario() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header con información de fecha
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  color: Colors.blue[700],
+                  size: 32,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Fecha de Creación',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[700],
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  _formatearFecha(_fechaCreacion),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.blue[600],
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '${_fechaCreacion.hour.toString().padLeft(2, '0')}:${_fechaCreacion.minute.toString().padLeft(2, '0')}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 24),
+
+          // Campo Materia
+          Text(
+            'Materia *',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _selectedMateria,
+            decoration: InputDecoration(
+              hintText: 'Seleccionar materia',
+              prefixIcon: Icon(Icons.book, color: Colors.blue[600]),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+              ),
+            ),
+            items: _materias.map((String materia) {
+              return DropdownMenuItem<String>(
+                value: materia,
+                child: Text(materia),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedMateria = newValue;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor selecciona una materia';
+              }
+              return null;
+            },
+          ),
+
+          SizedBox(height: 20),
+
+          // Campo Grupo
+          Text(
+            'Grupo *',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 8),
+          TextFormField(
+            controller: _grupoController,
+            decoration: InputDecoration(
+              hintText: 'Ej: 3A, 2B, 1C',
+              prefixIcon: Icon(Icons.group, color: Colors.blue[600]),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingresa el grupo';
+              }
+              if (value.length < 2) {
+                return 'El grupo debe tener al menos 2 caracteres';
+              }
+              return null;
+            },
+          ),
+
+          SizedBox(height: 20),
+
+          // Campo Docente
+          Text(
+            'Docente *',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _selectedDocente,
+            decoration: InputDecoration(
+              hintText: 'Seleccionar docente',
+              prefixIcon: Icon(Icons.person, color: Colors.blue[600]),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+              ),
+            ),
+            items: _docentes.map((Map<String, String> docente) {
+              return DropdownMenuItem<String>(
+                value: docente['id'],
+                child: Text(docente['nombre']!),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedDocente = newValue;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor selecciona un docente';
+              }
+              return null;
+            },
+          ),
+
+          SizedBox(height: 32),
+
+          // Botones
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _limpiarFormulario,
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey[400]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Limpiar',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: _guardandoClase ? null : _guardarClase,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: _guardandoClase
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text('Guardando...'),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.cloud_upload, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Guardar en Firebase',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 16),
+
+          // Información adicional
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.cloud, color: Colors.blue[600], size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Los datos se guardarán automáticamente en Firebase',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

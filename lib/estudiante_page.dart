@@ -1,3 +1,4 @@
+import 'package:check_list/auth/inicio_sesion.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -36,34 +37,68 @@ class _EstudianteDashboardState extends State<EstudianteDashboard> {
         });
       }
     } catch (e) {
-      print('Error loading student data: $e');
+      SnackBar(
+          content: Text('Error cargando la información del estudiante: $e'));
     }
   }
 
   List<Widget> get _pages => [
         PerfilEstudiante(estudianteData: estudianteData),
-        EscanerQR(),
+        EscanerQR(key: ValueKey(_selectedIndex)), // Add key to force rebuild
         CalendarioAsistencia(estudianteId: uid),
         RetroalimentacionPage(estudianteId: uid),
       ];
+
+  String get _currentTitle {
+    switch (_selectedIndex) {
+      case 0:
+        return 'Mi Perfil';
+      case 1:
+        return 'Escanear QR';
+      case 2:
+        return 'Mi Asistencia';
+      case 3:
+        return 'Retroalimentación';
+      default:
+        return 'Dashboard';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: blanco,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 800),
-          child: _pages[_selectedIndex],
-        ),
+      appBar: AppBar(
+        backgroundColor: azulOscuro,
+        centerTitle: true,
+        title: Text(_currentTitle, style: titulo.copyWith(color: blanco)),
+        elevation: 0,
+        actions: _selectedIndex == 0
+            ? [
+                IconButton(
+                  icon: Icon(Icons.logout, color: blanco),
+                  tooltip: 'Cerrar sesión',
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => InicioSesion()),
+                    );
+                    ;
+                  },
+                ),
+              ]
+            : null,
+        iconTheme: IconThemeData(color: blanco),
       ),
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: azulOscuro,
         selectedItemColor: blanco,
-        unselectedItemColor: blanco, // <-- todos los íconos blancos
+        unselectedItemColor: blanco.withOpacity(0.7),
         selectedIconTheme: IconThemeData(color: blanco),
-        unselectedIconTheme: IconThemeData(color: blanco),
+        unselectedIconTheme: IconThemeData(color: blanco.withOpacity(0.7)),
         currentIndex: _selectedIndex,
         onTap: (index) {
           setState(() {
@@ -100,70 +135,73 @@ class PerfilEstudiante extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: azulOscuro,
-        centerTitle: true,
-        title: Text('Mi Perfil', style: titulo.copyWith(color: blanco)),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout, color: blanco),
-            tooltip: 'Cerrar sesión',
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.of(context).pushReplacementNamed('/login');
-            },
-          ),
-        ],
-        iconTheme: IconThemeData(color: blanco),
-      ),
-      backgroundColor: blanco,
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(20),
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 800),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            sb30,
+            sb20,
+            // Profile Header Card
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(25),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
+                gradient: LinearGradient(
+                  colors: [azulITZ, azul],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: gris.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: Offset(0, 5),
+                    color: azulITZ.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: Offset(0, 8),
                   ),
                 ],
               ),
               child: Column(
                 children: [
                   CircleAvatar(
-                    radius: 50,
-                    backgroundColor: azulITZ,
-                    child: Icon(Icons.person, size: 50, color: blanco),
+                    radius: 60,
+                    backgroundColor: blanco,
+                    child: CircleAvatar(
+                      radius: 55,
+                      backgroundColor: azulOscuro,
+                      child: Icon(Icons.person, size: 60, color: blanco),
+                    ),
                   ),
-                  sb25,
-                  _buildInfoCard('Nombre', estudianteData?['Nombre'] ?? 'N/A'),
-                  sb10,
-                  _buildInfoCard('Correo',
-                      estudianteData?['CorreoInstitucional'] ?? 'N/A'),
-                  sb10,
-                  _buildInfoCard('Número de Control',
-                      estudianteData?['NumeroControl'] ?? 'N/A'),
-                  sb10,
-                  _buildInfoCard(
-                      'Carrera', estudianteData?['Carrera'] ?? 'N/A'),
-                  sb10,
-                  _buildInfoCard('Semestre',
-                      estudianteData?['Semestre']?.toString() ?? 'N/A'),
+                  sb20,
+                  Text(
+                    estudianteData?['Nombre'] ?? 'Estudiante',
+                    style: titulo.copyWith(color: blanco, fontSize: 24),
+                    textAlign: TextAlign.center,
+                  ),
+                  sb5,
+                  Text(
+                    estudianteData?['NumeroControl'] ?? 'N/A',
+                    style:
+                        TextStyle(color: blanco.withOpacity(0.9), fontSize: 16),
+                  ),
                 ],
               ),
             ),
             sb25,
+
+            // Info Cards
+            _buildInfoCard('Correo Institucional',
+                estudianteData?['CorreoInstitucional'] ?? 'N/A', Icons.email),
+            sb13,
+            _buildInfoCard(
+                'Carrera', estudianteData?['Carrera'] ?? 'N/A', Icons.school),
+            sb13,
+            _buildInfoCard('Semestre',
+                estudianteData?['Semestre']?.toString() ?? 'N/A', Icons.grade),
+            sb25,
+
+            // Stats Card
             _buildStatsCard(),
           ],
         ),
@@ -171,23 +209,41 @@ class PerfilEstudiante extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(String label, String value) {
+  Widget _buildInfoCard(String label, String value, IconData icon) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: azulClaro,
-        borderRadius: BorderRadius.circular(10),
-        border: Border(
-          left: BorderSide(color: azulITZ, width: 4),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: gris.withOpacity(0.2),
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: subtitulo),
-          Flexible(
-            child: Text(value, style: texto, textAlign: TextAlign.end),
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: azulClaro,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: azulITZ, size: 24),
+          ),
+          sb13,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(color: grisOscuro, fontSize: 14)),
+                sb5,
+                Text(value, style: subtitulo.copyWith(fontSize: 16)),
+              ],
+            ),
           ),
         ],
       ),
@@ -197,29 +253,30 @@ class PerfilEstudiante extends StatelessWidget {
   Widget _buildStatsCard() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(25),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: gris.withOpacity(0.3),
-            blurRadius: 10,
-            offset: Offset(0, 5),
+            color: gris.withOpacity(0.2),
+            blurRadius: 15,
+            offset: Offset(0, 8),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Estadísticas', style: subtitulo),
-          sb13,
+          Text('Estadísticas Académicas',
+              style: subtitulo.copyWith(fontSize: 18)),
+          sb20,
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatItem('Materias\nInscritas', '5', azulITZ),
-              _buildStatItem('Asistencia\nPromedio', '85%', azul),
-              _buildStatItem('Clases\nHoy', '3', azulOscLight),
+              _buildStatItem('Materias\nInscritas', '5', azulITZ, Icons.book),
+              _buildStatItem(
+                  'Asistencia\nPromedio', '85%', azul, Icons.check_circle),
+              _buildStatItem('Clases\nHoy', '3', azulOscLight, Icons.today),
             ],
           ),
         ],
@@ -227,30 +284,52 @@ class PerfilEstudiante extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color color) {
+  Widget _buildStatItem(
+      String label, String value, Color color, IconData icon) {
     return Column(
       children: [
         Container(
-          width: 60,
-          height: 60,
+          width: 70,
+          height: 70,
           decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(30),
+            gradient: LinearGradient(
+              colors: [color, color.withOpacity(0.8)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
-          child: Center(
-            child: Text(value,
-                style: TextStyle(
-                    color: blanco, fontSize: 16, fontWeight: FontWeight.bold)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: blanco, size: 20),
+              sb5,
+              Text(value,
+                  style: TextStyle(
+                      color: blanco,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold)),
+            ],
           ),
         ),
         sb10,
-        Text(label, style: texto, textAlign: TextAlign.center),
+        Text(label,
+            style: texto.copyWith(fontSize: 12), textAlign: TextAlign.center),
       ],
     );
   }
 }
 
 class EscanerQR extends StatefulWidget {
+  const EscanerQR({Key? key}) : super(key: key);
+
   @override
   _EscanerQRState createState() => _EscanerQRState();
 }
@@ -259,80 +338,171 @@ class _EscanerQRState extends State<EscanerQR> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
   bool isScanning = false;
+  bool isFlashOn = false;
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (controller != null) {
+      controller!.pauseCamera();
+      controller!.resumeCamera();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Escanear QR', style: TextStyle(color: blanco)),
-        backgroundColor: azulOscuro,
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Container(
-              margin: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: azulOscuro, width: 2),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(13),
-                child: QRView(
-                  key: qrKey,
-                  onQRViewCreated: _onQRViewCreated,
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 800),
+        child: Column(
+          children: [
+            Expanded(
+              flex: 5,
+              child: Container(
+                margin: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: azulOscuro.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Stack(
+                    children: [
+                      QRView(
+                        key: qrKey,
+                        onQRViewCreated: _onQRViewCreated,
+                        overlay: QrScannerOverlayShape(
+                          borderColor: azulITZ,
+                          borderRadius: 15,
+                          borderLength: 40,
+                          borderWidth: 8,
+                          cutOutSize: 280,
+                        ),
+                      ),
+                      Positioned(
+                        top: 20,
+                        right: 20,
+                        child: FloatingActionButton(
+                          mini: true,
+                          backgroundColor: azulOscuro.withOpacity(0.8),
+                          onPressed: () async {
+                            await controller?.toggleFlash();
+                            setState(() {
+                              isFlashOn = !isFlashOn;
+                            });
+                          },
+                          child: Icon(
+                            isFlashOn ? Icons.flash_off : Icons.flash_on,
+                            color: blanco,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Container(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text('Apunta la cámara hacia el código QR',
-                      style: subtitulo, textAlign: TextAlign.center),
-                  sb13,
-                  Container(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: azulITZ,
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+            Expanded(
+              flex: 2,
+              child: Container(
+                padding: EdgeInsets.all(25),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: azulClaro,
+                        borderRadius: BorderRadius.circular(15),
                       ),
-                      onPressed: isScanning
-                          ? null
-                          : () {
-                              controller?.resumeCamera();
-                              setState(() {
-                                isScanning = true;
-                              });
-                            },
-                      child: Text(
-                        isScanning ? 'Escaneando...' : 'Iniciar Escaneo',
-                        style: TextStyle(color: blanco, fontSize: 16),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, color: azulITZ),
+                          sb10,
+                          Expanded(
+                            child: Text(
+                              'Apunta la cámara hacia el código QR de tu clase',
+                              style: texto,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                    sb20,
+                    Container(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isScanning ? gris : azulITZ,
+                          padding: EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          elevation: isScanning ? 0 : 8,
+                        ),
+                        onPressed: isScanning
+                            ? null
+                            : () {
+                                controller?.resumeCamera();
+                                setState(() {
+                                  isScanning = true;
+                                });
+                              },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (isScanning)
+                              Container(
+                                width: 20,
+                                height: 20,
+                                margin: EdgeInsets.only(right: 10),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor:
+                                      AlwaysStoppedAnimation<Color>(blanco),
+                                ),
+                              ),
+                            Text(
+                              isScanning ? 'Escaneando...' : 'Iniciar Escaneo',
+                              style: TextStyle(
+                                  color: blanco,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
+    setState(() {
+      this.controller = controller;
+    });
+
     controller.scannedDataStream.listen((scanData) {
-      _handleQRScan(scanData.code ?? '');
+      if (isScanning) {
+        _handleQRScan(scanData.code ?? '');
+      }
     });
   }
 
@@ -344,10 +514,8 @@ class _EscanerQRState extends State<EscanerQR> {
     controller?.pauseCamera();
 
     try {
-      // Procesar el QR escaneado
       await _registrarAsistencia(qrData);
-
-      _showSuccessDialog('Asistencia registrada correctamente');
+      _showSuccessDialog('¡Asistencia registrada correctamente!');
     } catch (e) {
       _showErrorDialog('Error al registrar asistencia: $e');
     }
@@ -356,7 +524,6 @@ class _EscanerQRState extends State<EscanerQR> {
   Future<void> _registrarAsistencia(String qrData) async {
     String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
-    // Parsear datos del QR (formato: "materia_id,clase_fecha,profesor_id")
     List<String> qrParts = qrData.split(',');
     if (qrParts.length != 3) throw Exception('Código QR inválido');
 
@@ -366,7 +533,7 @@ class _EscanerQRState extends State<EscanerQR> {
 
     await FirebaseFirestore.instance
         .collection('Asistencias')
-        .doc('$uid\_$materiaId\_$claseFecha')
+        .doc('${uid}_${materiaId}_$claseFecha')
         .set({
       'estudianteId': uid,
       'materiaId': materiaId,
@@ -381,12 +548,25 @@ class _EscanerQRState extends State<EscanerQR> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Éxito', style: subtitulo),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            sb10,
+            Text('Éxito', style: subtitulo),
+          ],
+        ),
         content: Text(message, style: texto),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: azulITZ)),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                isScanning = false;
+              });
+            },
+            child: Text('OK',
+                style: TextStyle(color: azulITZ, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -397,22 +577,29 @@ class _EscanerQRState extends State<EscanerQR> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Error', style: subtitulo),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.error, color: Colors.red),
+            sb10,
+            Text('Error', style: subtitulo),
+          ],
+        ),
         content: Text(message, style: texto),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: azulITZ)),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                isScanning = false;
+              });
+            },
+            child: Text('OK',
+                style: TextStyle(color: azulITZ, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
   }
 }
 
@@ -469,67 +656,71 @@ class _CalendarioAsistenciaState extends State<CalendarioAsistencia> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          sb30,
-          Center(
-            child: Text('Mi Asistencia', style: titulo),
-          ),
-          sb25,
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: gris.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 800),
+          child: Column(
+            children: [
+              sb20,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: gris.withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: TableCalendar<Map<String, dynamic>>(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: _focusedDay,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              eventLoader: (day) {
-                DateTime key = DateTime(day.year, day.month, day.day);
-                return _asistencias[key] ?? [];
-              },
-              startingDayOfWeek: StartingDayOfWeek.monday,
-              calendarStyle: CalendarStyle(
-                outsideDaysVisible: false,
-                selectedDecoration: BoxDecoration(
-                  color: azulITZ,
-                  shape: BoxShape.circle,
-                ),
-                todayDecoration: BoxDecoration(
-                  color: azul,
-                  shape: BoxShape.circle,
-                ),
-                markerDecoration: BoxDecoration(
-                  color: azulOscLight,
-                  shape: BoxShape.circle,
+                child: TableCalendar<Map<String, dynamic>>(
+                  firstDay: DateTime.utc(2020, 1, 1),
+                  lastDay: DateTime.utc(2030, 12, 31),
+                  focusedDay: _focusedDay,
+                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                  eventLoader: (day) {
+                    DateTime key = DateTime(day.year, day.month, day.day);
+                    return _asistencias[key] ?? [];
+                  },
+                  startingDayOfWeek: StartingDayOfWeek.monday,
+                  calendarStyle: CalendarStyle(
+                    outsideDaysVisible: false,
+                    selectedDecoration: BoxDecoration(
+                      color: azulITZ,
+                      shape: BoxShape.circle,
+                    ),
+                    todayDecoration: BoxDecoration(
+                      color: azul,
+                      shape: BoxShape.circle,
+                    ),
+                    markerDecoration: BoxDecoration(
+                      color: azulOscLight,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  headerStyle: HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                    titleTextStyle: subtitulo.copyWith(fontSize: 18),
+                    leftChevronIcon:
+                        Icon(Icons.chevron_left, color: azulOscuro),
+                    rightChevronIcon:
+                        Icon(Icons.chevron_right, color: azulOscuro),
+                  ),
+                  onDaySelected: (selectedDay, focusedDay) {
+                    setState(() {
+                      _selectedDay = selectedDay;
+                      _focusedDay = focusedDay;
+                    });
+                  },
                 ),
               ),
-              headerStyle: HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
-                titleTextStyle: subtitulo,
-              ),
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-              },
-            ),
+              sb25,
+              if (_selectedDay != null) _buildAsistenciasDia(),
+            ],
           ),
-          sb25,
-          if (_selectedDay != null) _buildAsistenciasDia(),
-        ],
+        ),
       ),
     );
   }
@@ -541,27 +732,47 @@ class _CalendarioAsistenciaState extends State<CalendarioAsistencia> {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(25),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: gris.withOpacity(0.3),
-            blurRadius: 10,
-            offset: Offset(0, 5),
+            color: gris.withOpacity(0.2),
+            blurRadius: 15,
+            offset: Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-              'Asistencias del ${_selectedDay!.day}/${_selectedDay!.month}/${_selectedDay!.year}',
-              style: subtitulo),
-          sb13,
+          Row(
+            children: [
+              Icon(Icons.event, color: azulITZ),
+              sb10,
+              Text(
+                  'Asistencias del ${_selectedDay!.day}/${_selectedDay!.month}/${_selectedDay!.year}',
+                  style: subtitulo.copyWith(fontSize: 18)),
+            ],
+          ),
+          sb20,
           if (asistenciasDia.isEmpty)
-            Text('No hay asistencias registradas para este día', style: texto)
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: azulClaro,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: azulITZ),
+                  sb10,
+                  Text('No hay asistencias registradas para este día',
+                      style: texto),
+                ],
+              ),
+            )
           else
             ...asistenciasDia
                 .map((asistencia) => _buildAsistenciaItem(asistencia))
@@ -575,18 +786,30 @@ class _CalendarioAsistenciaState extends State<CalendarioAsistencia> {
     DateTime horaRegistro = (asistencia['horaRegistro'] as Timestamp).toDate();
 
     return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.all(15),
+      margin: EdgeInsets.only(bottom: 15),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: azulClaro,
-        borderRadius: BorderRadius.circular(10),
+        gradient: LinearGradient(
+          colors: [azulClaro, azulClaro.withOpacity(0.5)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
         border: Border(
           left: BorderSide(color: azulITZ, width: 4),
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: azulITZ,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.school, color: blanco, size: 20),
+          ),
+          sb13,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -595,7 +818,7 @@ class _CalendarioAsistenciaState extends State<CalendarioAsistencia> {
                 sb5,
                 Text(
                     'Hora: ${horaRegistro.hour.toString().padLeft(2, '0')}:${horaRegistro.minute.toString().padLeft(2, '0')}',
-                    style: texto),
+                    style: texto.copyWith(color: grisOscuro)),
               ],
             ),
           ),
@@ -632,7 +855,6 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
   }
 
   Future<void> _loadMaterias() async {
-    // Cargar materias del estudiante (esto dependería de tu estructura de datos)
     setState(() {
       _materias = ['Matemáticas', 'Física', 'Química', 'Historia', 'Inglés'];
       if (_materias.isNotEmpty) _selectedMateria = _materias[0];
@@ -643,122 +865,159 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          sb30,
-          Center(
-            child: Text('Retroalimentación', style: titulo),
-          ),
-          sb25,
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: gris.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Nueva Retroalimentación', style: subtitulo),
-                sb25,
-                Text('Materia:', style: texto),
-                sb10,
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 15),
-                  decoration: BoxDecoration(
-                    color: azulClaro,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedMateria.isEmpty ? null : _selectedMateria,
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedMateria = value ?? '';
-                        });
-                      },
-                      items: _materias.map((materia) {
-                        return DropdownMenuItem(
-                          value: materia,
-                          child: Text(materia, style: texto),
-                        );
-                      }).toList(),
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 800),
+          child: Column(
+            children: [
+              sb20,
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(25),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: gris.withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: Offset(0, 8),
                     ),
-                  ),
+                  ],
                 ),
-                sb25,
-                Text('Calificación:', style: texto),
-                sb10,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (index) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _calificacion = index + 1;
-                        });
-                      },
-                      child: Icon(
-                        Icons.star,
-                        size: 40,
-                        color: index < _calificacion ? Colors.amber : gris,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.rate_review, color: azulITZ),
+                        sb10,
+                        Text('Nueva Retroalimentación',
+                            style: subtitulo.copyWith(fontSize: 18)),
+                      ],
+                    ),
+                    sb25,
+                    Text('Materia:',
+                        style: texto.copyWith(fontWeight: FontWeight.w600)),
+                    sb10,
+                    Container(
+                      width: double.infinity,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: azulClaro,
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: azulITZ.withOpacity(0.3)),
                       ),
-                    );
-                  }),
-                ),
-                sb25,
-                Text('Comentarios:', style: texto),
-                sb10,
-                Container(
-                  decoration: BoxDecoration(
-                    color: azulClaro,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: TextField(
-                    controller: _feedbackController,
-                    maxLines: 5,
-                    decoration: InputDecoration(
-                      hintText: 'Escribe tus comentarios aquí...',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.all(15),
-                    ),
-                    style: texto,
-                  ),
-                ),
-                sb25,
-                Container(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: azulITZ,
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedMateria.isEmpty
+                              ? null
+                              : _selectedMateria,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedMateria = value ?? '';
+                            });
+                          },
+                          items: _materias.map((materia) {
+                            return DropdownMenuItem(
+                              value: materia,
+                              child: Text(materia, style: texto),
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
-                    onPressed: _enviarRetroalimentacion,
-                    child: Text(
-                      'Enviar Retroalimentación',
-                      style: TextStyle(color: blanco, fontSize: 16),
+                    sb25,
+                    Text('Calificación:',
+                        style: texto.copyWith(fontWeight: FontWeight.w600)),
+                    sb13,
+                    Container(
+                      padding: EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: azulClaro,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(5, (index) {
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _calificacion = index + 1;
+                              });
+                            },
+                            child: Container(
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              child: Icon(
+                                Icons.star,
+                                size: 45,
+                                color:
+                                    index < _calificacion ? Colors.amber : gris,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
                     ),
-                  ),
+                    sb25,
+                    Text('Comentarios:',
+                        style: texto.copyWith(fontWeight: FontWeight.w600)),
+                    sb10,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: azulClaro,
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: azulITZ.withOpacity(0.3)),
+                      ),
+                      child: TextField(
+                        controller: _feedbackController,
+                        maxLines: 6,
+                        decoration: InputDecoration(
+                          hintText: 'Escribe tus comentarios sobre la clase...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(20),
+                        ),
+                        style: texto,
+                      ),
+                    ),
+                    sb25,
+                    Container(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: azulITZ,
+                          padding: EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          elevation: 8,
+                        ),
+                        onPressed: _enviarRetroalimentacion,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.send, color: blanco),
+                            sb10,
+                            Text(
+                              'Enviar Retroalimentación',
+                              style: TextStyle(
+                                  color: blanco,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              sb25,
+              _buildHistorialRetroalimentacion(),
+            ],
           ),
-          sb25,
-          _buildHistorialRetroalimentacion(),
-        ],
+        ),
       ),
     );
   }
@@ -783,7 +1042,7 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
         _calificacion = 5;
       });
 
-      _showSuccessDialog('Retroalimentación enviada correctamente');
+      _showSuccessDialog('¡Retroalimentación enviada correctamente!');
     } catch (e) {
       _showErrorDialog('Error al enviar retroalimentación: $e');
     }
@@ -792,23 +1051,30 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
   Widget _buildHistorialRetroalimentacion() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(25),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: gris.withOpacity(0.3),
-            blurRadius: 10,
-            offset: Offset(0, 5),
+            color: gris.withOpacity(0.2),
+            blurRadius: 15,
+            offset: Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Historial de Retroalimentaciones', style: subtitulo),
-          sb13,
+          Row(
+            children: [
+              Icon(Icons.history, color: azulITZ),
+              sb10,
+              Text('Historial de Retroalimentaciones',
+                  style: subtitulo.copyWith(fontSize: 18)),
+            ],
+          ),
+          sb20,
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('Retroalimentaciones')
@@ -818,12 +1084,29 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(azulITZ),
+                  ),
+                );
               }
 
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Text('No hay retroalimentaciones anteriores',
-                    style: texto);
+                return Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: azulClaro,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: azulITZ),
+                      sb10,
+                      Text('No hay retroalimentaciones anteriores',
+                          style: texto),
+                    ],
+                  ),
+                );
               }
 
               return Column(
@@ -832,11 +1115,18 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
                   DateTime fecha = (data['fecha'] as Timestamp).toDate();
 
                   return Container(
-                    margin: EdgeInsets.only(bottom: 10),
-                    padding: EdgeInsets.all(15),
+                    margin: EdgeInsets.only(bottom: 15),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: azulClaro,
-                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: [azulClaro, azulClaro.withOpacity(0.5)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border(
+                        left: BorderSide(color: azulITZ, width: 4),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -844,26 +1134,45 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(data['materia'], style: subtitulo),
-                            Row(
-                              children: List.generate(5, (index) {
-                                return Icon(
-                                  Icons.star,
-                                  size: 16,
-                                  color: index < data['calificacion']
-                                      ? Colors.amber
-                                      : gris,
-                                );
-                              }),
+                            Expanded(
+                              child: Text(data['materia'],
+                                  style: subtitulo.copyWith(fontSize: 16)),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: azulITZ,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: List.generate(5, (index) {
+                                  return Icon(
+                                    Icons.star,
+                                    size: 14,
+                                    color: index < data['calificacion']
+                                        ? Colors.amber
+                                        : blanco.withOpacity(0.5),
+                                  );
+                                }),
+                              ),
                             ),
                           ],
                         ),
-                        sb5,
+                        sb10,
                         Text(data['comentarios'], style: texto),
-                        sb5,
-                        Text(
-                          '${fecha.day}/${fecha.month}/${fecha.year}',
-                          style: TextStyle(color: grisOscuro, fontSize: 12),
+                        sb10,
+                        Row(
+                          children: [
+                            Icon(Icons.access_time,
+                                size: 16, color: grisOscuro),
+                            sb5,
+                            Text(
+                              '${fecha.day}/${fecha.month}/${fecha.year} - ${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}',
+                              style: TextStyle(color: grisOscuro, fontSize: 12),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -881,12 +1190,20 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Éxito', style: subtitulo),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            sb10,
+            Text('Éxito', style: subtitulo),
+          ],
+        ),
         content: Text(message, style: texto),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: azulITZ)),
+            child: Text('OK',
+                style: TextStyle(color: azulITZ, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -897,12 +1214,20 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Error', style: subtitulo),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.error, color: Colors.red),
+            sb10,
+            Text('Error', style: subtitulo),
+          ],
+        ),
         content: Text(message, style: texto),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: azulITZ)),
+            child: Text('OK',
+                style: TextStyle(color: azulITZ, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
