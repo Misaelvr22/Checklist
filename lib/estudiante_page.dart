@@ -359,14 +359,17 @@ class _EscanerQRState extends State<EscanerQR> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        constraints: BoxConstraints(maxWidth: 800),
-        child: Column(
-          children: [
-            Expanded(
-              flex: 5,
-              child: Container(
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 800),
+          child: Column(
+            children: [
+              // Scanner QR - altura fija
+              Container(
+                height: MediaQuery.of(context).size.height *
+                    0.55, // Reducido de 0.6 a 0.55
                 margin: EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
@@ -415,82 +418,92 @@ class _EscanerQRState extends State<EscanerQR> {
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: EdgeInsets.all(25),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: azulClaro,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.info_outline, color: azulITZ),
-                          sb10,
-                          Expanded(
-                            child: Text(
-                              'Apunta la cámara hacia el código QR de tu clase',
-                              style: texto,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    sb20,
-                    Container(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isScanning ? gris : azulITZ,
-                          padding: EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          elevation: isScanning ? 0 : 8,
+              // Área de controles - usar Flexible en lugar de altura fija
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 25,
+                      vertical: 15), // Reducido padding vertical
+                  child: Column(
+                    mainAxisSize: MainAxisSize
+                        .min, // Importante: usar el mínimo espacio necesario
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(15), // Reducido de 20 a 15
+                        decoration: BoxDecoration(
+                          color: azulClaro,
+                          borderRadius: BorderRadius.circular(15),
                         ),
-                        onPressed: isScanning
-                            ? null
-                            : () {
-                                controller?.resumeCamera();
-                                setState(() {
-                                  isScanning = true;
-                                });
-                              },
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (isScanning)
-                              Container(
-                                width: 20,
-                                height: 20,
-                                margin: EdgeInsets.only(right: 10),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(blanco),
-                                ),
+                            Icon(Icons.info_outline, color: azulITZ),
+                            SizedBox(
+                                width: 10), // Usar SizedBox en lugar de sb10
+                            Expanded(
+                              child: Text(
+                                'Apunta la cámara hacia el código QR de tu clase',
+                                style: texto,
                               ),
-                            Text(
-                              isScanning ? 'Escaneando...' : 'Iniciar Escaneo',
-                              style: TextStyle(
-                                  color: blanco,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 15), // Reducido de 20 a 15
+                      Container(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isScanning ? gris : azulITZ,
+                            padding: EdgeInsets.symmetric(
+                                vertical: 15), // Reducido de 18 a 15
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            elevation: isScanning ? 0 : 8,
+                          ),
+                          onPressed: isScanning
+                              ? null
+                              : () {
+                                  controller?.resumeCamera();
+                                  setState(() {
+                                    isScanning = true;
+                                  });
+                                },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize:
+                                MainAxisSize.min, // Usar el mínimo espacio
+                            children: [
+                              if (isScanning)
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  margin: EdgeInsets.only(right: 10),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor:
+                                        AlwaysStoppedAnimation<Color>(blanco),
+                                  ),
+                                ),
+                              Text(
+                                isScanning
+                                    ? 'Escaneando...'
+                                    : 'Iniciar Escaneo',
+                                style: TextStyle(
+                                    color: blanco,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -525,7 +538,8 @@ class _EscanerQRState extends State<EscanerQR> {
 
   Future<void> _registrarAsistencia(String qrData) async {
     String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    String nombre = FirebaseAuth.instance.currentUser?.displayName ?? 'Estudiante';
+    String nombre =
+        FirebaseAuth.instance.currentUser?.displayName ?? 'Estudiante';
     String correo = FirebaseAuth.instance.currentUser?.email ?? '';
 
     // Decodifica el QR (espera un JSON)
@@ -1274,4 +1288,3 @@ class _RetroalimentacionPageState extends State<RetroalimentacionPage> {
     super.dispose();
   }
 }
-
