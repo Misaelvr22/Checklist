@@ -1,3 +1,4 @@
+import 'package:check_list/asistencia_profesor.dart';
 import 'package:check_list/estudiante_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -21,8 +22,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: EstudianteDashboard(),
-    );
+        debugShowCheckedModeBanner: false, home: InicioSesion());
   }
 }

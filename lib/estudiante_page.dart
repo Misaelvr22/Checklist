@@ -364,63 +364,64 @@ class _EscanerQRState extends State<EscanerQR> {
       child: Center(
         child: Container(
           constraints: BoxConstraints(maxWidth: 800),
-          child: Column(
-            children: [
-              // Scanner QR - altura fija
-              Container(
-                height: MediaQuery.of(context).size.height *
-                    0.55, // Reducido de 0.6 a 0.55
-                margin: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: azulOscuro.withOpacity(0.3),
-                      blurRadius: 15,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Stack(
-                    children: [
-                      QRView(
-                        key: qrKey,
-                        onQRViewCreated: _onQRViewCreated,
-                        overlay: QrScannerOverlayShape(
-                          borderColor: azulITZ,
-                          borderRadius: 15,
-                          borderLength: 40,
-                          borderWidth: 8,
-                          cutOutSize: 280,
-                        ),
-                      ),
-                      Positioned(
-                        top: 20,
-                        right: 20,
-                        child: FloatingActionButton(
-                          mini: true,
-                          backgroundColor: azulOscuro.withOpacity(0.8),
-                          onPressed: () async {
-                            await controller?.toggleFlash();
-                            setState(() {
-                              isFlashOn = !isFlashOn;
-                            });
-                          },
-                          child: Icon(
-                            isFlashOn ? Icons.flash_off : Icons.flash_on,
-                            color: blanco,
-                          ),
-                        ),
+          child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(), // Para un scroll más suave
+            child: Column(
+              children: [
+                // Scanner QR - altura fija
+                Container(
+                  height: MediaQuery.of(context).size.height *
+                      0.55, // Reducido de 0.6 a 0.55
+                  margin: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: azulOscuro.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: Offset(0, 8),
                       ),
                     ],
                   ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Stack(
+                      children: [
+                        QRView(
+                          key: qrKey,
+                          onQRViewCreated: _onQRViewCreated,
+                          overlay: QrScannerOverlayShape(
+                            borderColor: azulITZ,
+                            borderRadius: 15,
+                            borderLength: 40,
+                            borderWidth: 8,
+                            cutOutSize: 280,
+                          ),
+                        ),
+                        Positioned(
+                          top: 20,
+                          right: 20,
+                          child: FloatingActionButton(
+                            mini: true,
+                            backgroundColor: azulOscuro.withOpacity(0.8),
+                            onPressed: () async {
+                              await controller?.toggleFlash();
+                              setState(() {
+                                isFlashOn = !isFlashOn;
+                              });
+                            },
+                            child: Icon(
+                              isFlashOn ? Icons.flash_off : Icons.flash_on,
+                              color: blanco,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              // Área de controles - usar Flexible en lugar de altura fija
-              Flexible(
-                child: Container(
+                // Área de controles - ahora sin Flexible
+                Container(
                   padding: EdgeInsets.symmetric(
                       horizontal: 25,
                       vertical: 15), // Reducido padding vertical
@@ -498,11 +499,12 @@ class _EscanerQRState extends State<EscanerQR> {
                           ),
                         ),
                       ),
+                      SizedBox(height: 20), // Espacio adicional al final
                     ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

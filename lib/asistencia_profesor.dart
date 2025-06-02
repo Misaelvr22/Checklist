@@ -665,6 +665,7 @@ class _QRGeneratorPageState extends State<QRGeneratorPage> {
   }
 }
 
+// FeedBack Page
 class FeedbackPage extends StatefulWidget {
   final String? initialSubject; // Para abrir directamente en una materia
 
